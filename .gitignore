@@ -5,6 +5,8 @@ node_modules/
 # Build outputs
 dist/
 build/
+out/
+storybook-static/
 
 # Logs
 *.log
@@ -15,6 +17,7 @@ pnpm-debug.log*
 # System files
 .DS_Store
 Thumbs.db
+*.orig
 
 # Env files
 .env
@@ -25,19 +28,33 @@ Thumbs.db
 .vscode/
 .idea/
 *.sw?
+*.iml
 
-# Optional: if using coverage tools
-coverage/
+# Python cache
+__pycache__/
+*.pyc
 
 # Optional: if using TypeScript
 *.tsbuildinfo
 
-# Optional: if using Storybook
-storybook-static/
+# Optional: if using coverage tools
+coverage/
 
-# Optional: if using JetBrains IDEs
-*.iml
-out/
+# Optional: if using Jest
+jest-cache/
+jest-report/
 
-# Optional: if using Linux / macOS generated files
-*.orig
+# Optional: if using ESLint or Prettier
+.eslintcache
+.prettiercache
+
+# Optional: if using macOS
+.AppleDouble
+.LSOverride
+
+# Optional: if using Windows
+Desktop.ini
+ehthumbs.db
+
+# Optional: if using Linux
+*~
