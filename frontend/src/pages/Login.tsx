@@ -11,7 +11,7 @@ export default function LoginPage() {
     try {
       const response = await login(email, password);
       localStorage.setItem("token", response.token);
-      window.location.href = "/main"; // redirige a la interfaz principal
+      window.location.href = "/main";
     } catch (error) {
       alert("Invalid credentials");
     }
