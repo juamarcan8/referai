@@ -9,8 +9,7 @@ interface VideoClip {
 const dummyVideos: VideoClip[] = [
   { id: 1, url: "/videos/SampleVideo_360x240_1mb.mp4" },
   { id: 2, url: "/videos/SampleVideo_360x240_1mb.mp4" },
-  { id: 3, url: "/videos/SampleVideo_360x240_1mb.mp4" },
-  { id: 4, url: "/videos/SampleVideo_360x240_1mb.mp4" },
+  { id: 3, url: "/videos/SampleVideo_360x240_1mb.mp4" }
   // Uncomment or add more objects to simulate 3 or 4 clips.
 ];
 
@@ -75,11 +74,7 @@ export default function MainPage() {
   {/* Video Grid Section */}
   <div
     className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-sky-950 ${
-      videos.length === 2
-        ? "grid-cols-1 grid-rows-2"
-        : videos.length === 3
-        ? "grid-cols-2 grid-rows-2"
-        : "grid-cols-2 grid-rows-2"
+      videos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
     }`}
   >
     {videos.map((video, index) => (

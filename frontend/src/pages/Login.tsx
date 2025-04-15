@@ -30,7 +30,7 @@ export default function LoginPage() {
       </div>
 
       {/* Login Form */}
-      <div className="flex-2 basis-1/3 mr-6 max-w-sm bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg dark:shadow-none">
+      <div className="flex basis-1/3 mr-6 max-w-sm bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg dark:shadow-none">
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-4 max-w-sm mx-auto"
