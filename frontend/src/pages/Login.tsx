@@ -11,17 +11,74 @@ export default function LoginPage() {
     try {
       const response = await login(email, password);
       localStorage.setItem("token", response.token);
-      window.location.href = "/main"; // redirige a la interfaz principal
+      window.location.href = "/main";
     } catch (error) {
       alert("Invalid credentials");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 max-w-sm mx-auto mt-10">
-      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
-      <button type="submit" className="bg-blue-600 text-white p-2 rounded">Login</button>
-    </form>
+    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4">
+      {/* Intro Panel */}
+      <div className="flex-1 basis-1/3 p-6 text-center md:text-right">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500 mb-4 animate-fade-in">
+          Welcome Back
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 text-lg">
+          Please enter your credentials to log in and continue.
+        </p>
+      </div>
+
+      {/* Login Form */}
+      <div className="flex basis-1/3 mr-6 max-w-sm bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg dark:shadow-none">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 max-w-sm mx-auto"
+        >
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            Login
+          </button>
+
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
+            Don't have an account?{" "}
+            <a href="/register" className="text-blue-600 hover:underline">
+              Sign up
+            </a>
+          </p>
+        </form>
+      </div>
+    </div>
+
   );
 }
