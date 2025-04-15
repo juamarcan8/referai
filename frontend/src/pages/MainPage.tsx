@@ -1,4 +1,3 @@
-// frontend/src/pages/MainPage.tsx
 import React, { useState, useRef, useEffect } from "react";
 
 interface VideoClip {
@@ -72,86 +71,86 @@ export default function MainPage() {
   }, []);
 
   return (
-    <div className="flex h-screen">
-      {/* Video Grid Section */}
+    <div className="flex flex-col md:flex-row h-screen">
+  {/* Video Grid Section */}
+  <div
+    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-sky-950 ${
+      videos.length === 2
+        ? "grid-cols-1 grid-rows-2"
+        : videos.length === 3
+        ? "grid-cols-2 grid-rows-2"
+        : "grid-cols-2 grid-rows-2"
+    }`}
+  >
+    {videos.map((video, index) => (
       <div
-        className="flex-[3] grid"
-        style={{
-          display: "items-center",
-          gridTemplateColumns: videos.length === 2 ? "1fr" : "1fr 1fr",
-          gridTemplateRows: videos.length <= 2 ? "1fr 1fr" : "1fr 1fr",
-          gridTemplateAreas:
-            videos.length === 2
-              ? `
-                "video1"
-                "video2"
-              `
-              : videos.length === 3
-              ? `
-                "video1 video2"
-                "video3 video3"
-              `
-              : `
-                "video1 video2"
-                "video3 video4"
-              `,
-        }}
+        key={video.id}
+        className={`rounded-md overflow-hidden ${
+          videos.length === 3 && index === 2 ? "col-span-2" : ""
+        }`}
       >
-        {videos.map((video, index) => (
-          <div
-            key={video.id}
-            className=" border border-indigo-800 -md"
-            style={{
-              gridArea: `video${index + 1}`,
-            }}
-          >
-            <video src={video.url} controls={false} ref={(el) => { if (el) videoRefs.current[index] = el; }} className="w-full h-full" />
-          </div>
-        ))}
+        <video
+          src={video.url}
+          controls={false}
+          ref={(el) => {
+            if (el) videoRefs.current[index] = el;
+          }}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    ))}
+  </div>
+
+  {/* Side Panel */}
+  <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
+    {/* Controls */}
+    <div className="grid grid-cols-3 mb-4 gap-2">
+      {/* Range Input */}
+      <div className="col-span-2 flex items-center">
+        <input
+          type="range"
+          min="0"
+          max={videoRefs.current[0]?.duration || 0}
+          value={currentTime}
+          onChange={(e) => handleTimeUpdate(Number(e.target.value))}
+          className="w-full accent-blue-700"
+          aria-label="Video progress"
+        />
       </div>
 
-      {/* Side Panel */}
-      <div className="flex-[1] p-4 h-full">
-        <div className="grid grid-cols-3 mb-4">
-          {/* Input Range */}
-          <div className="col-span-2 flex justify-center items-center">
-            <input
-              type="range"
-              min="0"
-              max={videoRefs.current[0]?.duration || 0}
-              value={currentTime}
-              onChange={(e) => handleTimeUpdate(Number(e.target.value))}
-              className="w-full bg-blue-700"
-            />
-          </div>
-
-          {/* Play/Pause Button */}
-          <div className="col-span-1 flex justify-center items-center">
-            <button
-              onClick={togglePlayPause}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              {isPlaying ? "Pause" : "Play"}
-            </button>
-          </div>
-        </div>
-
+      {/* Play/Pause Button */}
+      <div className="col-span-1 flex justify-center items-center">
         <button
-          onClick={handlePrediction}
-          className="w-full py-2 mb-4 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
+          onClick={togglePlayPause}
+          aria-pressed={isPlaying}
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
         >
-          Run Prediction
+          {isPlaying ? "Pause" : "Play"}
         </button>
-
-        <div className="p-4 bg-white rounded shadow">
-          <h3 className="mb-2 font-bold">Prediction Result</h3>
-          {result ? (
-            <p className="text-lg">{result}</p>
-          ) : (
-            <p>No prediction yet</p>
-          )}
-        </div>
       </div>
     </div>
+
+    {/* Prediction Result */}
+    <div className="mx-auto flex max-w-sm items-center gap-x-4 rounded-xl bg-white p-6 shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10 mb-4">
+      <div>
+        <h3 className="font-bold text-gray-800 dark:text-white mb-1">Prediction Result</h3>
+        {result ? (
+          <p className="text-lg text-gray-700 dark:text-gray-200">{result}</p>
+        ) : (
+          <p className="text-gray-500">No prediction yet</p>
+        )}
+      </div>
+    </div>
+
+    {/* Run Prediction Button */}
+    <button
+      onClick={handlePrediction}
+      className="w-full py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
+    >
+      Run Prediction
+    </button>
+  </div>
+</div>
+
   );
 }
