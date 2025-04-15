@@ -73,7 +73,7 @@ export default function MainPage() {
     <div className="flex flex-col md:flex-row h-screen">
   {/* Video Grid Section */}
   <div
-    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-sky-950 ${
+    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${
       videos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
     }`}
   >
