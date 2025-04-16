@@ -1,12 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
+import { useSelectedVideos } from "../context/SelectedVideosContext";
+import { useNavigate } from "react-router-dom";
 
 export default function UploadPage() {
-    const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+    const { selectedVideos, setSelectedVideos } = useSelectedVideos();
+    const navigate = useNavigate();
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
 
     const exampleVideos = [
-        { id: 1, url: "/public/videos/SampleVideo_360x240_1mb.mp4", label: "Foul Example 1" },
-        { id: 2, url: "/public/videos/SampleVideo_720x480_1mb.mp4", label: "No Foul Example 1" },
+        { id: 1, url: "/videos/SampleVideo_360x240_1mb.mp4", label: "Foul Example 1" },
+        { id: 2, url: "/videos/SampleVideo_720x480_1mb.mp4", label: "No Foul Example 1" },
       ];
 
     const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,13 +33,14 @@ export default function UploadPage() {
     };
 
     const handleContinue = () => {
+        console.log(selectedVideos)
         if (selectedVideos.length >= 2 && selectedVideos.length <= 4) {
             // Simulate upload progress
             const progress = Array.from({ length: selectedVideos.length }, (_, i) => i * 25 + 25);
             setUploadProgress(progress);
             setTimeout(() => {
                 // Redirect to the main page after upload
-                window.location.href = "/main";
+                navigate("/main");
             }, 2000); // Simulate a 2-second upload time
         }
     }
