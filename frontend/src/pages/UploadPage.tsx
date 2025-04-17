@@ -16,8 +16,12 @@ export default function UploadPage() {
         const files = event.target.files;
         if (files) {
             const fileArray = Array.from(files).slice(0, 4); // Limit to 4 files
-            setSelectedVideos(fileArray.map(file => URL.createObjectURL(file)));
-        }
+            const objectURLs = fileArray.map(file => URL.createObjectURL(file));
+            setSelectedVideos(prev => {
+                // Revoke previous object URLs to prevent memory leaks
+                prev.forEach(url => URL.revokeObjectURL(url));
+                return objectURLs;
+            });
     }
 
     const handleExampleSelect = (video: { url: string }) => {
