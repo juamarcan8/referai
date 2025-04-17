@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelectedVideos } from "../context/SelectedVideosContext";
 
 interface VideoClip {
   id: number;
@@ -14,7 +15,7 @@ const dummyVideos: VideoClip[] = [
 ];
 
 export default function MainPage() {
-  const [videos] = useState<VideoClip[]>(dummyVideos);
+  const { selectedVideos } = useSelectedVideos();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
@@ -73,19 +74,19 @@ export default function MainPage() {
     <div className="flex flex-col md:flex-row h-screen">
   {/* Video Grid Section */}
   <div
-    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-sky-950 ${
-      videos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
+    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${
+      selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
     }`}
   >
-    {videos.map((video, index) => (
+    {selectedVideos.map((video, index) => (
       <div
-        key={video.id}
+        key={index}
         className={`rounded-md overflow-hidden ${
-          videos.length === 3 && index === 2 ? "col-span-2" : ""
+          selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
         }`}
       >
         <video
-          src={video.url}
+          src={video}
           controls={false}
           ref={(el) => {
             if (el) videoRefs.current[index] = el;
