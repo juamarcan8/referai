@@ -1,6 +1,6 @@
 # app/main.py
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse
+import os
 from app.api.v1.api import api_router
 from app.auth.routes import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +23,11 @@ app.include_router(auth_router)
 async def upload_file(file: UploadFile = File(...)):
     contents = await file.read()
     print(f"Received file: {file.filename}, size: {len(contents)} bytes")
-    with open(f"videos/{file.filename}", "wb") as f:
+
+    os.makedirs("/backend/videos", exist_ok=True)
+
+    file_path = os.path.join("/backend/videos", file.filename)
+    with open(file_path, "wb") as f:
         f.write(contents)
+
     return {"message": "Upload successful", "filename": file.filename}
