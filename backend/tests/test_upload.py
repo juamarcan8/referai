@@ -24,7 +24,7 @@ def test_upload_file():
     assert data["filename"] == test_filename
 
     # Check file was saved
-    saved_path = f"/backend/videos/{test_filename}"
+    saved_path = f"backend/videos/{test_filename}"
     assert os.path.exists(saved_path)
 
     with open(saved_path, "rb") as f:
@@ -50,11 +50,11 @@ def test_upload_large_file():
 
     assert response.status_code == 200
     assert response.json()["filename"] == filename
-    os.remove(f"/backend/videos/{filename}")
+    os.remove(f"backend/videos/{filename}")
 
 def test_upload_overwrite_file():
     filename = "overwrite.mp4"
-    path = f"/backend/videos/{filename}"
+    path = f"backend/videos/{filename}"
 
     # Guardar un primer archivo
     with open(path, "wb") as f:
