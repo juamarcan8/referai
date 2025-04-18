@@ -6,14 +6,6 @@ interface VideoClip {
   url: string;
 }
 
-// Dummy video clips for demonstration
-const dummyVideos: VideoClip[] = [
-  { id: 1, url: "/videos/SampleVideo_360x240_1mb.mp4" },
-  { id: 2, url: "/videos/SampleVideo_360x240_1mb.mp4" },
-  { id: 3, url: "/videos/SampleVideo_360x240_1mb.mp4" }
-  // Uncomment or add more objects to simulate 3 or 4 clips.
-];
-
 export default function MainPage() {
   const { selectedVideos } = useSelectedVideos();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -86,6 +78,7 @@ export default function MainPage() {
         }`}
       >
         <video
+          muted
           src={video}
           controls={false}
           ref={(el) => {

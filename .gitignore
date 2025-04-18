@@ -58,3 +58,5 @@ ehthumbs.db
 
 # Optional: if using Linux
 *~
+
+/backend/videos/
