@@ -24,9 +24,9 @@ async def upload_file(file: UploadFile = File(...)):
     contents = await file.read()
     print(f"Received file: {file.filename}, size: {len(contents)} bytes")
 
-    os.makedirs("backend/videos", exist_ok=True)
+    os.makedirs("videos", exist_ok=True)
 
-    file_path = os.path.join("backend/videos", file.filename)
+    file_path = os.path.join("videos", file.filename)
     with open(file_path, "wb") as f:
         f.write(contents)
 

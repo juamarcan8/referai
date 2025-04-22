@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
+import { sendForPrediction } from "../api/predict";
 
 interface VideoClip {
   id: number;
@@ -13,10 +14,23 @@ export default function MainPage() {
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [result, setResult] = useState<string | null>(null);
 
-  const handlePrediction = () => {
-    setResult("Foul (85%)");
+  const handlePrediction = async () => {
+    const filenames = selectedVideos.map((url) => {
+      const parts = url.split("/");
+      return parts[parts.length - 1];
+    });
+  
+    try {
+      const prediction = await sendForPrediction(filenames);
+      const text = prediction.is_foul
+        ? `Foul detected with ${Math.round(prediction.confidence * 100)}% confidence.`
+        : `No foul detected. Confidence: ${Math.round(prediction.confidence * 100)}%`;
+      setResult(text);
+    } catch (error) {
+      setResult("Prediction failed. Please try again.");
+    }
   };
-
+  
   // Play or pause all videos
   const togglePlayPause = () => {
     setIsPlaying((prev) => {
@@ -123,10 +137,11 @@ export default function MainPage() {
     <div className="mx-auto flex max-w-sm items-center gap-x-4 rounded-xl bg-white p-6 shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10 mb-4">
       <div>
         <h3 className="font-bold text-gray-800 dark:text-white mb-1">Prediction Result</h3>
-        {result ? (
-          <p className="text-lg text-gray-700 dark:text-gray-200">{result}</p>
-        ) : (
-          <p className="text-gray-500">No prediction yet</p>
+        {result && (
+          <div className="mt-6 bg-white dark:bg-slate-800 shadow-lg rounded-xl p-4 w-full max-w-xl text-center">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Prediction Result</h3>
+            <p className="mt-2 text-gray-700 dark:text-gray-300">{result}</p>
+          </div>
         )}
       </div>
     </div>
