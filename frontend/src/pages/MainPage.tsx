@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
-import { sendForPrediction } from "../api/predict";
+import { sendForPrediction, SinglePrediction } from "../api/predict";
 
 interface VideoClip {
   id: number;
@@ -12,25 +12,25 @@ export default function MainPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
+  const [predictions, setPredictions] = useState<SinglePrediction[] | null>(null);
   const [result, setResult] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handlePrediction = async () => {
-    const filenames = selectedVideos.map((url) => {
-      const parts = url.split("/");
-      return parts[parts.length - 1];
-    });
-  
+    // Extrae sólo el nombre de archivo de la URL
+    const filenames = selectedVideos.map((url) => url.split("/").pop()!);
+
+    setLoading(true);
     try {
-      const prediction = await sendForPrediction(filenames);
-      const text = prediction.is_foul
-        ? `Foul detected with ${Math.round(prediction.confidence * 100)}% confidence.`
-        : `No foul detected. Confidence: ${Math.round(prediction.confidence * 100)}%`;
-      setResult(text);
-    } catch (error) {
-      setResult("Prediction failed. Please try again.");
+      const data = await sendForPrediction(filenames);
+      setPredictions(data.results);
+    } catch (err) {
+      console.error("Prediction error", err);
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   // Play or pause all videos
   const togglePlayPause = () => {
     setIsPlaying((prev) => {
@@ -62,12 +62,12 @@ export default function MainPage() {
         setCurrentTime(videoRefs.current[0].currentTime);
       }
     };
-  
+
     // Agrega el evento `timeupdate` a todos los videos
     videoRefs.current.forEach((video) => {
       video.addEventListener("timeupdate", handleSync);
     });
-  
+
     // Limpia los eventos al desmontar el componente
     return () => {
       videoRefs.current.forEach((video) => {
@@ -78,83 +78,149 @@ export default function MainPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen">
-  {/* Video Grid Section */}
-  <div
-    className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${
-      selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
-    }`}
-  >
-    {selectedVideos.map((video, index) => (
+      {/* Video Grid Section */}
       <div
-        key={index}
-        className={`rounded-md overflow-hidden ${
-          selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
-        }`}
+        className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
+          }`}
       >
-        <video
-          muted
-          src={video}
-          controls={false}
-          ref={(el) => {
-            if (el) videoRefs.current[index] = el;
-          }}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    ))}
-  </div>
-
-  {/* Side Panel */}
-  <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
-    {/* Controls */}
-    <div className="grid grid-cols-3 mb-4 gap-2">
-      {/* Range Input */}
-      <div className="col-span-2 flex items-center">
-        <input
-          type="range"
-          min="0"
-          max={videoRefs.current[0]?.duration || 0}
-          value={currentTime}
-          onChange={(e) => handleTimeUpdate(Number(e.target.value))}
-          className="w-full accent-blue-700"
-          aria-label="Video progress"
-        />
+        {selectedVideos.map((video, index) => (
+          <div
+            key={index}
+            className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
+              }`}
+          >
+            <video
+              muted
+              src={video}
+              controls={false}
+              ref={(el) => {
+                if (el) videoRefs.current[index] = el;
+              }}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Play/Pause Button */}
-      <div className="col-span-1 flex justify-center items-center">
+      {/* Side Panel */}
+      <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
+        {/* Controls */}
+        <div className="grid grid-cols-3 mb-4 gap-2">
+          {/* Range Input */}
+          <div className="col-span-2 flex items-center">
+            <input
+              type="range"
+              min="0"
+              max={videoRefs.current[0]?.duration || 0}
+              value={currentTime}
+              onChange={(e) => handleTimeUpdate(Number(e.target.value))}
+              className="w-full accent-blue-700"
+              aria-label="Video progress"
+            />
+          </div>
+
+          {/* Play/Pause Button */}
+          <div className="col-span-1 flex justify-center items-center">
+            <button
+              onClick={togglePlayPause}
+              aria-pressed={isPlaying}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              {isPlaying ? "Pause" : "Play"}
+            </button>
+          </div>
+        </div>
+
+        {/* Prediction Result */}
+        <div className="mt-6 space-y-4">
+          {loading ? (
+            // Animación de pulsación mientras está cargando
+            <div className="mx-auto w-full max-w-sm rounded-md border border-blue-300 p-4">
+              <div className="flex animate-pulse space-x-4">
+                <div className="flex-1 space-y-6 py-1">
+                  <div className="h-2 rounded bg-gray-200"></div>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-2 h-2 rounded bg-gray-200"></div>
+                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                    </div>
+                    <div className="h-2 rounded bg-gray-200"></div>
+                    <div className="h-2 rounded bg-gray-200"></div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                      <div className="col-span-2 h-2 rounded bg-gray-200"></div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="col-span-3 h-2 rounded bg-gray-200"></div>
+                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Resultados reales después de cargar
+            predictions &&
+            predictions.map((pred) => (
+              <div
+                key={pred.filename}
+                className="bg-white p-4 rounded shadow-sm border"
+              >
+                <h4 className="font-semibold">{pred.filename}</h4>
+                <p>
+                  <strong>Foul:</strong>{" "}
+                  {pred.is_foul ? "Yes" : "No"} (
+                  {pred.foul_confidence.toFixed(1)}% vs{" "}
+                  {pred.no_foul_confidence.toFixed(1)}%)
+                </p>
+                <p className="mt-2">
+                  <strong>Severity:</strong>{" "}
+                  No card {pred.severity.no_card.toFixed(1)}%,{" "}
+                  Red card {pred.severity.red_card.toFixed(1)}%,{" "}
+                  Yellow card {pred.severity.yellow_card.toFixed(1)}%
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Run Prediction Button */}
         <button
-          onClick={togglePlayPause}
-          aria-pressed={isPlaying}
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          onClick={handlePrediction}
+          disabled={loading || selectedVideos.length === 0}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {isPlaying ? "Pause" : "Play"}
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              Predicting...
+            </>
+          ) : (
+            "Run Prediction"
+          )}
         </button>
       </div>
     </div>
 
-    {/* Prediction Result */}
-    <div className="mx-auto flex max-w-sm items-center gap-x-4 rounded-xl bg-white p-6 shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10 mb-4">
-      <div>
-        <h3 className="font-bold text-gray-800 dark:text-white mb-1">Prediction Result</h3>
-        {result && (
-          <div className="mt-6 bg-white dark:bg-slate-800 shadow-lg rounded-xl p-4 w-full max-w-xl text-center">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Prediction Result</h3>
-            <p className="mt-2 text-gray-700 dark:text-gray-300">{result}</p>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Run Prediction Button */}
-    <button
-      onClick={handlePrediction}
-      className="w-full py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
-    >
-      Run Prediction
-    </button>
-  </div>
-</div>
 
   );
 }
