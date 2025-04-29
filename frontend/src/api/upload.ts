@@ -1,24 +1,19 @@
-import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
-export const uploadClip = async (
-  file: File,
-  onProgress?: (percent: number) => void
-) => {
+export async function uploadClips(files: File[], token: string, actionId?: number) {
   const formData = new FormData();
-  formData.append("file", file);
+  files.forEach(file => formData.append("files", file));
+  if (actionId) formData.append("action_id", actionId.toString());
 
-  const response = await axios.post("http://127.0.0.1:8080/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    withCredentials: false,
-    onUploadProgress: (event) => {
-      if (onProgress && event.total) {
-        const percent = Math.round((event.loaded * 100) / event.total);
-        onProgress(percent);
-      }
-    },
+  const response = await fetch(`${API_URL}/upload`, {
+      method: "POST",
+      headers: {
+          Authorization: `Bearer ${token}`,
+      },
+      body: formData,
   });
 
-  return response.data.filename;
-};
+  if (!response.ok) throw new Error("Upload failed");
+  return await response.json(); // will contain action_id
+}
+

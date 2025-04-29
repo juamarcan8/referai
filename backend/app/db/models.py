@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import ForeignKey, String, Enum, DateTime, func, Float
+from sqlalchemy import ForeignKey, String, Enum, DateTime, func, Float, LargeBinary
 import enum
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
 
@@ -46,10 +46,10 @@ class Clip(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     action_id: Mapped[int] = mapped_column(ForeignKey("action.id"))
     action: Mapped["Action"] = relationship(back_populates="clips")
-    filename: Mapped[str] = mapped_column(nullable=False)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
     def __repr__(self) -> str:
-        return f"Clip(id={self.id!r}, filename={self.filename!r})"
+        return f"Clip(id={self.id!r}, action_id={self.action_id!r})"
     
 class Prediction(Base):
     __tablename__ = "prediction"

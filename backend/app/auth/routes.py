@@ -1,25 +1,26 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from app.auth.schemas import UserLogin, UserRegister
+from fastapi.security import OAuth2PasswordRequestForm
+from typing import List
 from sqlalchemy.orm import Session
-from app.db.models import User
+from app.db.models import User, Action, Clip
 from app.db.database import get_db
 from passlib.context import CryptContext
-from app.auth.jwt_utils import create_access_token
+from app.auth.jwt_utils import create_access_token, get_current_user
+from datetime import timedelta
 
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/login")
-async def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if not db_user or not pwd_context.verify(user.password, db_user.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not pwd_context.verify(form_data.password, user.password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
 
-    token = create_access_token(data={"sub": db_user.email})
+    token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(minutes=30))
     return {"access_token": token, "token_type": "bearer"}
-
-
 
 @router.post("/register")
 async def register(user: UserRegister, db: Session = Depends(get_db)):
@@ -41,3 +42,28 @@ async def register(user: UserRegister, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "User registered successfully.", "email": new_user.email}
+
+@router.post("/upload")
+async def upload_clips(
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    print("Upload endpoint hit")
+
+    action = Action(user_id=current_user.id)
+    db.add(action)
+    db.commit()
+    db.refresh(action)
+
+    for file in files:
+        print(f"Received file: {file.filename}")
+        content = await file.read()
+        clip = Clip(
+            action_id=action.id,
+            content=content
+        )
+        db.add(clip)
+
+    db.commit()
+    return {"message": "Clips uploaded", "action_id": action.id}

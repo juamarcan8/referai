@@ -2,6 +2,8 @@ import { useState } from "react";
 import { login } from "../services/auth.ts";
 import React from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -9,13 +11,28 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await login(email, password);
-      localStorage.setItem("token", response.token);
-      window.location.href = "/upload";
+        const response = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                username: email,  // tu campo de email
+                password: password,  // tu campo de contraseña
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            localStorage.setItem("token", data.access_token);
+            window.location.href = "/upload";
+        } else {
+            throw new Error(data.detail || "Login failed");
+        }
     } catch (error) {
-      alert("Invalid credentials");
+        alert("Invalid credentials: " + error.message);
     }
-  };
+};
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4">
