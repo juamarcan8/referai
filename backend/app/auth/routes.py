@@ -18,10 +18,8 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
 
     token = create_access_token(data={"sub": db_user.email})
     return {"access_token": token, "token_type": "bearer"}
-    
-@router.get("/register")
-async def get_register_page():
-    return {"message": "This is the registration page, please provide your email and password to register."}
+
+
 
 @router.post("/register")
 async def register(user: UserRegister, db: Session = Depends(get_db)):

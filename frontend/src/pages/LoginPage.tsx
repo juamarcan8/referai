@@ -11,7 +11,7 @@ export default function LoginPage() {
     try {
       const response = await login(email, password);
       localStorage.setItem("token", response.token);
-      window.location.href = "/";
+      window.location.href = "/upload";
     } catch (error) {
       alert("Invalid credentials");
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
 import { useNavigate } from "react-router-dom";
 import { uploadClip } from "../api/upload";  // Ensure uploadClip is correctly imported
+import Navbar from "../components/Navbar";
 
 export default function UploadPage() {
     const { selectedVideos, setSelectedVideos } = useSelectedVideos();
@@ -77,6 +78,8 @@ export default function UploadPage() {
     };
 
     return (
+        <>
+        <Navbar />
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 py-8">
             {/* Title */}
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Clip selection</h1>
@@ -177,5 +180,6 @@ export default function UploadPage() {
                 Continue
             </button>
         </div>
+        </>
     );
 }
