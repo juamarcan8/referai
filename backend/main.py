@@ -1,4 +1,3 @@
-# app/main.py
 from fastapi import FastAPI, File, UploadFile
 import os
 from app.api.v1.api import api_router

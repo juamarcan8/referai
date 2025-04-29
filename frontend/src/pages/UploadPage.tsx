@@ -69,7 +69,7 @@ export default function UploadPage() {
                 // You can use the uploaded filenames for further processing
                 console.log("Uploaded filenames:", uploadedFilenames);
 
-                navigate("/main");
+                navigate("/");
             } catch (error) {
                 console.error("Upload failed", error);
             }
