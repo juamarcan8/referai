@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
 import { useNavigate } from "react-router-dom";
-import { uploadClip } from "../api/upload";  // Ensure uploadClip is correctly imported
+import { uploadClips } from "../api/upload";  // Ensure uploadClip is correctly imported
+import Navbar from "../components/Navbar";
 
 export default function UploadPage() {
     const { selectedVideos, setSelectedVideos } = useSelectedVideos();
@@ -47,36 +48,30 @@ export default function UploadPage() {
         );
     };
 
-    // Handle the "Continue" action and upload files
     const handleContinue = async () => {
         if (selectedVideos.length >= 2 && selectedVideos.length <= 4) {
             try {
-                const uploadedFilenames: string[] = [];
-
-                // Upload selected user files
-                for (let i = 0; i < uploadedFiles.length; i++) {
-                    const file = uploadedFiles[i];
-                    const filename = await uploadClip(file, (percent) => {
-                        setUploadProgress((prev) => {
-                            const copy = [...prev];
-                            copy[i] = percent;
-                            return copy;
-                        });
-                    });
-                    uploadedFilenames.push(filename);
+                const token = localStorage.getItem("token");
+    
+                // Validar que sea un JWT real
+                if (!token || !token.includes('.') || token.split('.').length !== 3) {
+                    throw new Error("User not authenticated or token malformed");
                 }
-
-                // You can use the uploaded filenames for further processing
-                console.log("Uploaded filenames:", uploadedFilenames);
-
-                navigate("/main");
+    
+                const res = await uploadClips(uploadedFiles, token);
+                console.log("Uploaded to action:", res.action_id);
+                localStorage.setItem("last_action_id", res.action_id);
+                navigate("/");
             } catch (error) {
                 console.error("Upload failed", error);
+                alert("Upload failed: " + error.message);
             }
         }
     };
 
     return (
+        <>
+        <Navbar />
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 py-8">
             {/* Title */}
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Clip selection</h1>
@@ -177,5 +172,6 @@ export default function UploadPage() {
                 Continue
             </button>
         </div>
+        </>
     );
 }

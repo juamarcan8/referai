@@ -2,18 +2,35 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SelectedVideosProvider } from "./context/SelectedVideosContext";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import MainPage from "./pages/MainPage";
 import UploadPage from "./pages/UploadPage";
-import './index.css'; 
+import './index.css';
+import { PublicRoute } from "./auth/PublicRoute";
+import { PrivateRoute } from "./auth/PrivateRoute";
 
 export default function App() {
   return (
     <SelectedVideosProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/main" element={<MainPage />} />
-          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/" element={
+            <PrivateRoute>
+              <MainPage />
+            </PrivateRoute>} />
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>} />
+          <Route path="/register" element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          } />
+          <Route path="/upload" element={
+            <PrivateRoute>
+              <UploadPage />
+            </PrivateRoute>} />
         </Routes>
       </Router>
     </SelectedVideosProvider>
