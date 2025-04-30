@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
 import { sendForPrediction, SinglePrediction } from "../api/predict";
+import Navbar from "../components/Navbar";
 
-interface VideoClip {
-  id: number;
-  url: string;
-}
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function MainPage() {
-  const { selectedVideos } = useSelectedVideos();
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [predictions, setPredictions] = useState<SinglePrediction[] | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePrediction = async () => {
     // Extrae sólo el nombre de archivo de la URL
@@ -30,6 +29,53 @@ export default function MainPage() {
       setLoading(false);
     }
   };
+
+  // Retrieves the id of the selected action from localStorage
+  useEffect(() => {
+    const fetchClips = async () => {
+      const stored = localStorage.getItem("last_action_id");
+      if (!stored) return;
+
+      setIsLoading(true);
+
+      localStorage.removeItem("last_action_id");
+  
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("User not authenticated");
+        return;
+      }
+  
+      try {
+        const res = await fetch(`${API_URL}/action/${stored}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || "Failed to fetch clips");
+        }
+  
+        const data = await res.json();
+        const videoURLs = data.clips.map((clip: any) => {
+          const binary = Uint8Array.from(atob(clip.content), (c) => c.charCodeAt(0));
+          return URL.createObjectURL(new Blob([binary], { type: "video/mp4" }));
+        });
+  
+        setSelectedVideos(videoURLs);
+      } catch (error) {
+        console.error("Error fetching clips:", error);
+        alert("Error fetching clips: " + error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchClips();
+  }, []);
 
   // Play or pause all videos
   const togglePlayPause = () => {
@@ -77,61 +123,70 @@ export default function MainPage() {
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen">
-      {/* Video Grid Section */}
-      <div
-        className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
-          }`}
-      >
-        {selectedVideos.map((video, index) => (
-          <div
-            key={index}
-            className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
-              }`}
-          >
-            <video
-              muted
-              src={video}
-              controls={false}
-              ref={(el) => {
-                if (el) videoRefs.current[index] = el;
-              }}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Side Panel */}
-      <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
-        {/* Controls */}
-        <div className="grid grid-cols-3 mb-4 gap-2">
-          {/* Range Input */}
-          <div className="col-span-2 flex items-center">
-            <input
-              type="range"
-              min="0"
-              max={videoRefs.current[0]?.duration || 0}
-              value={currentTime}
-              onChange={(e) => handleTimeUpdate(Number(e.target.value))}
-              className="w-full accent-blue-700"
-              aria-label="Video progress"
-            />
-          </div>
-
-          {/* Play/Pause Button */}
-          <div className="col-span-1 flex justify-center items-center">
-            <button
-              onClick={togglePlayPause}
-              aria-pressed={isPlaying}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              {isPlaying ? "Pause" : "Play"}
-            </button>
-          </div>
+    <>
+      <Navbar />
+      <div className="flex flex-col md:flex-row h-screen">
+        {/* Video Grid Section */}
+        <div
+          className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
+            }`}
+        >
+          {isLoading ? (
+            <div className="col-span-2 row-span-2 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            selectedVideos.map((video, index) => (
+              <div
+                key={index}
+                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
+                  }`}
+              >
+                <video
+                  muted
+                  src={video}
+                  controls={false}
+                  ref={(el) => {
+                    if (el) videoRefs.current[index] = el;
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))
+          )}
         </div>
 
-        {/* Prediction Result */}
+
+        {/* Side Panel */}
+        <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
+          {/* Controls */}
+          <div className="grid grid-cols-3 mb-4 gap-2">
+            {/* Range Input */}
+            <div className="col-span-2 flex items-center">
+              <input
+                type="range"
+                min="0"
+                max={videoRefs.current[0]?.duration || 0}
+                value={currentTime}
+                onChange={(e) => handleTimeUpdate(Number(e.target.value))}
+                className="w-full accent-blue-700"
+                aria-label="Video progress"
+              />
+            </div>
+
+            {/* Play/Pause Button */}
+            <div className="col-span-1 flex justify-center items-center">
+              <button
+                onClick={togglePlayPause}
+                aria-pressed={isPlaying}
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+              >
+                {isPlaying ? "Pause" : "Play"}
+              </button>
+            </div>
+          </div>
+
+          {/* Prediction Result */}
         <div className="mt-6 space-y-4">
           {loading ? (
             // Animación de pulsación mientras está cargando
@@ -218,9 +273,9 @@ export default function MainPage() {
             "Run Prediction"
           )}
         </button>
+        </div>
       </div>
-    </div>
-
+    </>
 
   );
 }
