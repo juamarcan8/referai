@@ -9,7 +9,7 @@ export default function MainPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [result, setResult] = useState<string | null>(null);
-  const [actionId, setActionId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePrediction = () => {
     setResult("Foul (85%)");
@@ -20,7 +20,9 @@ export default function MainPage() {
     const fetchClips = async () => {
       const stored = localStorage.getItem("last_action_id");
       if (!stored) return;
-      setActionId(Number(stored));
+
+      setIsLoading(true);
+
       localStorage.removeItem("last_action_id");
   
       const token = localStorage.getItem("token");
@@ -33,7 +35,7 @@ export default function MainPage() {
         const res = await fetch(`${API_URL}/action/${stored}`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Agrega el token JWT aquí
+            Authorization: `Bearer ${token}`,
           },
         });
   
@@ -52,6 +54,8 @@ export default function MainPage() {
       } catch (error) {
         console.error("Error fetching clips:", error);
         alert("Error fetching clips: " + error.message);
+      } finally {
+        setIsLoading(false);
       }
     };
   
@@ -112,24 +116,31 @@ export default function MainPage() {
           className={`flex-[3] grid gap-2 p-2 bg-white dark:bg-slate-800 ${selectedVideos.length === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"
             }`}
         >
-          {selectedVideos.map((video, index) => (
-            <div
-              key={index}
-              className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
-                }`}
-            >
-              <video
-                muted
-                src={video}
-                controls={false}
-                ref={(el) => {
-                  if (el) videoRefs.current[index] = el;
-                }}
-                className="w-full h-full object-cover"
-              />
+          {isLoading ? (
+            <div className="col-span-2 row-span-2 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ))}
+          ) : (
+            selectedVideos.map((video, index) => (
+              <div
+                key={index}
+                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
+                  }`}
+              >
+                <video
+                  muted
+                  src={video}
+                  controls={false}
+                  ref={(el) => {
+                    if (el) videoRefs.current[index] = el;
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))
+          )}
         </div>
+
 
         {/* Side Panel */}
         <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
