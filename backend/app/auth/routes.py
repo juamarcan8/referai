@@ -42,28 +42,3 @@ async def register(user: UserRegister, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "User registered successfully.", "email": new_user.email}
-
-@router.post("/upload")
-async def upload_clips(
-    files: List[UploadFile] = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    print("Upload endpoint hit")
-
-    action = Action(user_id=current_user.id)
-    db.add(action)
-    db.commit()
-    db.refresh(action)
-
-    for file in files:
-        print(f"Received file: {file.filename}")
-        content = await file.read()
-        clip = Clip(
-            action_id=action.id,
-            content=content
-        )
-        db.add(clip)
-
-    db.commit()
-    return {"message": "Clips uploaded", "action_id": action.id}

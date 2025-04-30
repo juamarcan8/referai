@@ -60,7 +60,7 @@ export default function UploadPage() {
     
                 const res = await uploadClips(uploadedFiles, token);
                 console.log("Uploaded to action:", res.action_id);
-    
+                localStorage.setItem("last_action_id", res.action_id);
                 navigate("/");
             } catch (error) {
                 console.error("Upload failed", error);

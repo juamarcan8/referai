@@ -14,6 +14,6 @@ export async function uploadClips(files: File[], token: string, actionId?: numbe
   });
 
   if (!response.ok) throw new Error("Upload failed");
-  return await response.json(); // will contain action_id
+  return await response.json();
 }
 

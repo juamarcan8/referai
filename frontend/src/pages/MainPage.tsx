@@ -1,17 +1,62 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useSelectedVideos } from "../context/SelectedVideosContext";
 import Navbar from "../components/Navbar";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function MainPage() {
-  const { selectedVideos } = useSelectedVideos();
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [result, setResult] = useState<string | null>(null);
+  const [actionId, setActionId] = useState<number | null>(null);
 
   const handlePrediction = () => {
     setResult("Foul (85%)");
   };
+
+  // Retrieves the id of the selected action from localStorage
+  useEffect(() => {
+    const fetchClips = async () => {
+      const stored = localStorage.getItem("last_action_id");
+      if (!stored) return;
+      setActionId(Number(stored));
+      localStorage.removeItem("last_action_id");
+  
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("User not authenticated");
+        return;
+      }
+  
+      try {
+        const res = await fetch(`${API_URL}/action/${stored}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Agrega el token JWT aquí
+          },
+        });
+  
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || "Failed to fetch clips");
+        }
+  
+        const data = await res.json();
+        const videoURLs = data.clips.map((clip: any) => {
+          const binary = Uint8Array.from(atob(clip.content), (c) => c.charCodeAt(0));
+          return URL.createObjectURL(new Blob([binary], { type: "video/mp4" }));
+        });
+  
+        setSelectedVideos(videoURLs);
+      } catch (error) {
+        console.error("Error fetching clips:", error);
+        alert("Error fetching clips: " + error.message);
+      }
+    };
+  
+    fetchClips();
+  }, []);
 
   // Play or pause all videos
   const togglePlayPause = () => {
