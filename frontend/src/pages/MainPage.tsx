@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
-import { PredictResponse, sendForPrediction, SinglePrediction } from "../api/predict";
+import { PredictResponse, SinglePrediction } from "../api/predict";
 import Navbar from "../components/Navbar";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -11,7 +11,6 @@ export default function MainPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [predictions, setPredictions] = useState<SinglePrediction[] | null>(null);
-  const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -238,18 +237,16 @@ export default function MainPage() {
             predictions.map((pred) => (
               <div
                 key={pred.filename}
-                className="bg-white p-4 rounded shadow-sm border"
+                className="p-4 rounded shadow-sm border"
               >
                 <h4 className="font-semibold">{pred.filename}</h4>
                 <p>
-                  <strong>Foul:</strong>{" "}
-                  {pred.is_foul ? "Yes" : "No"} (
+                  <strong>Foul:</strong> {pred.is_foul ? "Yes" : "No"} (
                   {pred.foul_confidence.toFixed(1)}% vs{" "}
                   {pred.no_foul_confidence.toFixed(1)}%)
                 </p>
                 <p className="mt-2">
-                  <strong>Severity:</strong>{" "}
-                  No card {pred.severity.no_card.toFixed(1)}%,{" "}
+                  <strong>Severity:</strong> No card {pred.severity.no_card.toFixed(1)}%,{" "}
                   Red card {pred.severity.red_card.toFixed(1)}%,{" "}
                   Yellow card {pred.severity.yellow_card.toFixed(1)}%
                 </p>

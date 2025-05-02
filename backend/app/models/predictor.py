@@ -181,15 +181,17 @@ def extract_features_x3d(video_path, model):
     return features.cpu().numpy()
 
 def predict(video_paths: list) -> dict:
+    # Load feature extraction models
     mvit = load_mvit_model()
     x3d = load_x3d_model()
     slowfast = load_slowfast_model()
+
+    # Initialize lists to store action clips
     action_clips_mvit = []
     action_clips_x3d = []
     action_clips_slowfast = []
 
-    action_features = [] # list of means
-
+    # Process each video and extract features
     for video_path in video_paths:   
         try:
             features_mvit = extract_features_mvit(video_path, 50, 80, mvit)
@@ -202,26 +204,46 @@ def predict(video_paths: list) -> dict:
         except Exception as e:
             print(f"Error while processing video {video_path}: {e}")
 
+    # Calculate mean features for each model
+    action_features = []
     action_features.append(np.mean(action_clips_mvit, axis=0)) 
     action_features.append(np.mean(action_clips_x3d, axis=0))
     action_features.append(np.mean(action_clips_slowfast, axis=0))
 
     print("Action features shape: ", len(action_features))
 
-    # # Foul prediction
-    # foul_preds: List[int] = [model.predict(features)[0] for model in FOUL_MODELS]
+    # Verify that all features have been calculated for each 3 models
+    if len(action_features) != 3:
+        raise RuntimeError("All 3 models should have produced features.")
+    
+    foul_preds = []
+    for i, model in enumerate(FOUL_MODELS):
+        feature = action_features[i]
+        prediction = model.predict(feature)[0]
+        foul_preds.append(prediction)
 
-    # total_foul_preds = len(foul_preds)
-    # foul_pct = (foul_preds.count(1)/total_foul_preds) * 100
-    # no_foul_pct = (foul_preds.count(0)/total_foul_preds) * 100
+    # Calculate the average of the predictions
+    total_foul_preds = len(foul_preds)
+    foul_pct = (foul_preds.count(1)/total_foul_preds) * 100
+    no_foul_pct = (foul_preds.count(0)/total_foul_preds) * 100
 
-    # # Severity prediction
-    # severity_preds = [model.predict(features)[0] for model in SEVERITY_MODELS]
+    # Calculate the severity predictions only if a foul is detected
+    if foul_pct > no_foul_pct:
+        severity_preds = []
+        for i, model in enumerate(SEVERITY_MODELS):
+            feature = action_features[i]
+            prediction = model.predict(feature)[0]
+            severity_preds.append(prediction)
 
-    # total_severity_preds = len(severity_preds)
-    # no_card_pct = (severity_preds.count(0)/total_severity_preds) * 100
-    # red_card_pct = (severity_preds.count(1)/total_severity_preds) * 100
-    # yellow_card_pct = (severity_preds.count(2)/total_severity_preds) * 100
+        # Calculate the average of the severity predictions
+        total_severity_preds = len(severity_preds)
+        red_card_pct = (severity_preds.count(1)/total_severity_preds) * 100
+        yellow_card_pct = (severity_preds.count(2)/total_severity_preds) * 100
+        no_card_pct = (severity_preds.count(0)/total_severity_preds) * 100
+    else:
+        red_card_pct = 0
+        yellow_card_pct = 0
+        no_card_pct = 100
 
     return {
         "is_foul": foul_pct > no_foul_pct,
