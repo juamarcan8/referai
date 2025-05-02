@@ -46,7 +46,7 @@ def load_slowfast_model():
 def load_mvit_model():
     model = models.mvit_v2_s(weights=models.MViT_V2_S_Weights.DEFAULT).to(device)
     model.eval()
-    return model,
+    return model
 
 
 def preprocess_video_for_mvit(video_path, start_frame=60, end_frame=80, num_frames=16):
@@ -161,7 +161,7 @@ def extract_features_slowfast(video_path, model):
     
     return features.cpu().numpy()
 
-def extract_features_mvit(video_path, start_frame, end_frame,model):
+def extract_features_mvit(video_path, start_frame, end_frame, model):
     frames = preprocess_video_for_mvit(video_path, start_frame, end_frame)
     #print("Frames tensor shape:", frames.shape)
     with torch.no_grad():
@@ -180,23 +180,48 @@ def extract_features_x3d(video_path, model):
     
     return features.cpu().numpy()
 
-def predict(video_path: str) -> dict:
-    features = extract_features_mvit(video_path)
+def predict(video_paths: list) -> dict:
+    mvit = load_mvit_model()
+    x3d = load_x3d_model()
+    slowfast = load_slowfast_model()
+    action_clips_mvit = []
+    action_clips_x3d = []
+    action_clips_slowfast = []
 
-    # Foul prediction
-    foul_preds: List[int] = [model.predict(features)[0] for model in FOUL_MODELS]
+    action_features = [] # list of means
 
-    total_foul_preds = len(foul_preds)
-    foul_pct = (foul_preds.count(1)/total_foul_preds) * 100
-    no_foul_pct = (foul_preds.count(0)/total_foul_preds) * 100
+    for video_path in video_paths:   
+        try:
+            features_mvit = extract_features_mvit(video_path, 50, 80, mvit)
+            features_x3d = extract_features_x3d(video_path, x3d)
+            features_slowfast = extract_features_slowfast(video_path, slowfast)
 
-    # Severity prediction
-    severity_preds = [model.predict(features)[0] for model in SEVERITY_MODELS]
+            action_clips_mvit.append(features_mvit)
+            action_clips_x3d.append(features_x3d)
+            action_clips_slowfast.append(features_slowfast)
+        except Exception as e:
+            print(f"Error while processing video {video_path}: {e}")
 
-    total_severity_preds = len(severity_preds)
-    no_card_pct = (severity_preds.count(0)/total_severity_preds) * 100
-    red_card_pct = (severity_preds.count(1)/total_severity_preds) * 100
-    yellow_card_pct = (severity_preds.count(2)/total_severity_preds) * 100
+    action_features.append(np.mean(action_clips_mvit, axis=0)) 
+    action_features.append(np.mean(action_clips_x3d, axis=0))
+    action_features.append(np.mean(action_clips_slowfast, axis=0))
+
+    print("Action features shape: ", len(action_features))
+
+    # # Foul prediction
+    # foul_preds: List[int] = [model.predict(features)[0] for model in FOUL_MODELS]
+
+    # total_foul_preds = len(foul_preds)
+    # foul_pct = (foul_preds.count(1)/total_foul_preds) * 100
+    # no_foul_pct = (foul_preds.count(0)/total_foul_preds) * 100
+
+    # # Severity prediction
+    # severity_preds = [model.predict(features)[0] for model in SEVERITY_MODELS]
+
+    # total_severity_preds = len(severity_preds)
+    # no_card_pct = (severity_preds.count(0)/total_severity_preds) * 100
+    # red_card_pct = (severity_preds.count(1)/total_severity_preds) * 100
+    # yellow_card_pct = (severity_preds.count(2)/total_severity_preds) * 100
 
     return {
         "is_foul": foul_pct > no_foul_pct,

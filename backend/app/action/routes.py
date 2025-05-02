@@ -28,7 +28,6 @@ async def upload_clips(
     db.refresh(action)
 
     for file in files:
-        print(f"Received file: {file.filename}")
         content = await file.read()
         clip = Clip(
             action_id=action.id,

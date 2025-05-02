@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelectedVideos } from "../context/SelectedVideosContext";
-import { sendForPrediction, SinglePrediction } from "../api/predict";
+import { PredictResponse, sendForPrediction, SinglePrediction } from "../api/predict";
 import Navbar from "../components/Navbar";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -16,15 +16,34 @@ export default function MainPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePrediction = async () => {
-    // Extrae sólo el nombre de archivo de la URL
-    const filenames = selectedVideos.map((url) => url.split("/").pop()!);
-
+    const actionId = localStorage.getItem("last_action_id");
+    const token = localStorage.getItem("token");
+  
+    if (!actionId || !token) {
+      alert("User not authenticated or action ID not found");
+      return;
+    }
+  
     setLoading(true);
     try {
-      const data = await sendForPrediction(filenames);
+      const response = await fetch(`${API_URL}/v1/predict/${actionId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to run prediction");
+      }
+  
+      const data: PredictResponse = await response.json();
       setPredictions(data.results);
     } catch (err) {
       console.error("Prediction error", err);
+      alert("Error running prediction: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -38,7 +57,7 @@ export default function MainPage() {
 
       setIsLoading(true);
 
-      localStorage.removeItem("last_action_id");
+      //localStorage.removeItem("last_action_id");
   
       const token = localStorage.getItem("token");
       if (!token) {
