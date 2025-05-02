@@ -17,12 +17,12 @@ export default function MainPage() {
   const handlePrediction = async () => {
     const actionId = localStorage.getItem("last_action_id");
     const token = localStorage.getItem("token");
-  
+
     if (!actionId || !token) {
       alert("User not authenticated or action ID not found");
       return;
     }
-  
+
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/v1/predict/${actionId}`, {
@@ -32,12 +32,12 @@ export default function MainPage() {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to run prediction");
       }
-  
+
       const data: PredictResponse = await response.json();
       setPredictions(data.results);
     } catch (err) {
@@ -57,13 +57,13 @@ export default function MainPage() {
       setIsLoading(true);
 
       //localStorage.removeItem("last_action_id");
-  
+
       const token = localStorage.getItem("token");
       if (!token) {
         alert("User not authenticated");
         return;
       }
-  
+
       try {
         const res = await fetch(`${API_URL}/action/${stored}`, {
           method: "GET",
@@ -71,18 +71,18 @@ export default function MainPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-  
+
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.detail || "Failed to fetch clips");
         }
-  
+
         const data = await res.json();
         const videoURLs = data.clips.map((clip: any) => {
           const binary = Uint8Array.from(atob(clip.content), (c) => c.charCodeAt(0));
           return URL.createObjectURL(new Blob([binary], { type: "video/mp4" }));
         });
-  
+
         setSelectedVideos(videoURLs);
       } catch (error) {
         console.error("Error fetching clips:", error);
@@ -91,7 +91,7 @@ export default function MainPage() {
         setIsLoading(false);
       }
     };
-  
+
     fetchClips();
   }, []);
 
@@ -205,90 +205,111 @@ export default function MainPage() {
           </div>
 
           {/* Prediction Result */}
-        <div className="mt-6 space-y-4">
-          {loading ? (
-            // Animación de pulsación mientras está cargando
-            <div className="mx-auto w-full max-w-sm rounded-md border border-blue-300 p-4">
-              <div className="flex animate-pulse space-x-4">
-                <div className="flex-1 space-y-6 py-1">
-                  <div className="h-2 rounded bg-gray-200"></div>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-2 h-2 rounded bg-gray-200"></div>
-                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
-                    </div>
-                    <div className="h-2 rounded bg-gray-200"></div>
-                    <div className="h-2 rounded bg-gray-200"></div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
-                      <div className="col-span-2 h-2 rounded bg-gray-200"></div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="col-span-3 h-2 rounded bg-gray-200"></div>
-                      <div className="col-span-1 h-2 rounded bg-gray-200"></div>
-                    </div>
-                  </div>
+          <div className="mt-6">
+            {loading ? (
+              // Loader (Skeleton)
+              <div className="mx-auto w-full max-w-md rounded-xl border border-blue-300 p-6 bg-slate-800 shadow animate-pulse">
+                <div className="space-y-4">
+                  <div className="h-4 bg-gray-600 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-600 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-600 rounded w-2/3"></div>
+                  <div className="h-4 bg-gray-600 rounded w-4/5"></div>
+                  <div className="h-4 bg-gray-600 rounded w-3/4"></div>
                 </div>
               </div>
-            </div>
-          ) : (
-            // Resultados reales después de cargar
-            predictions &&
-            predictions.map((pred) => (
-              <div
-                key={pred.filename}
-                className="p-4 rounded shadow-sm border"
-              >
-                <h4 className="font-semibold">{pred.filename}</h4>
-                <p>
-                  <strong>Foul:</strong> {pred.is_foul ? "Yes" : "No"} (
-                  {pred.foul_confidence.toFixed(1)}% vs{" "}
-                  {pred.no_foul_confidence.toFixed(1)}%)
-                </p>
-                <p className="mt-2">
-                  <strong>Severity:</strong> No card {pred.severity.no_card.toFixed(1)}%,{" "}
-                  Red card {pred.severity.red_card.toFixed(1)}%,{" "}
-                  Yellow card {pred.severity.yellow_card.toFixed(1)}%
-                </p>
-              </div>
-            ))
-          )}
-        </div>
+            ) : (
+              predictions &&
+              predictions.map((prediction) => (
+                <div
+                  key={prediction.filename}
+                  className="p-6 rounded-2xl shadow-md border border-gray-700 bg-slate-800 max-w-3xl mx-auto"
+                >
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                      <h2 className="text-lg font-semibold text-white mb-1">Foul Prediction</h2>
+                      <p className="text-gray-300">
+                        <strong>Result:</strong> {prediction.is_foul ? "Yes" : "No"} (
+                        {prediction.foul_confidence.toFixed(1)}% vs{" "}
+                        {prediction.no_foul_confidence.toFixed(1)}%)
+                      </p>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-white mb-1">Severity</h2>
+                      <p className="text-gray-300">
+                        No card {prediction.severity.no_card.toFixed(1)}%, Red card{" "}
+                        {prediction.severity.red_card.toFixed(1)}%, Yellow card{" "}
+                        {prediction.severity.yellow_card.toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
 
-        {/* Run Prediction Button */}
-        <button
-          onClick={handlePrediction}
-          disabled={loading || selectedVideos.length === 0}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              Predicting...
-            </>
-          ) : (
-            "Run Prediction"
-          )}
-        </button>
+                  <div className="mt-6 border-t border-gray-700 pt-4">
+                    <h3 className="text-md font-semibold text-white mb-2">Foul Model Results</h3>
+                    <ul className="list-disc ml-6 text-sm text-gray-300 space-y-1">
+                      {prediction.foul_model_results.map((modelResult, index) => (
+                        <li key={index}>
+                          {modelResult.model}: {modelResult.prediction === 1 ? "Foul" : "No Foul"}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-6 border-t border-gray-700 pt-4">
+                    <h3 className="text-md font-semibold text-white mb-2">Severity Model Results</h3>
+                    <ul className="list-disc ml-6 text-sm text-gray-300 space-y-1">
+                      {prediction.severity_model_results.map((modelResult, index) => (
+                        <li key={index}>
+                          {modelResult.model}:{" "}
+                          {modelResult.prediction === 0
+                            ? "No Card"
+                            : modelResult.prediction === 1
+                              ? "Red Card"
+                              : "Yellow Card"}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+
+
+          {/* Run Prediction Button */}
+          <button
+            onClick={handlePrediction}
+            disabled={loading || selectedVideos.length === 0}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+                Predicting...
+              </>
+            ) : (
+              "Run Prediction"
+            )}
+          </button>
         </div>
       </div>
     </>

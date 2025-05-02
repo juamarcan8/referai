@@ -217,10 +217,15 @@ def predict(video_paths: list) -> dict:
         raise RuntimeError("All 3 models should have produced features.")
     
     foul_preds = []
+    foul_model_results = []
     for i, model in enumerate(FOUL_MODELS):
         feature = action_features[i]
         prediction = model.predict(feature)[0]
         foul_preds.append(prediction)
+        foul_model_results.append({
+            "model": f"Foul Model {i+1}",
+            "prediction": prediction
+        })
 
     # Calculate the average of the predictions
     total_foul_preds = len(foul_preds)
@@ -230,10 +235,15 @@ def predict(video_paths: list) -> dict:
     # Calculate the severity predictions only if a foul is detected
     if foul_pct > no_foul_pct:
         severity_preds = []
+        severity_model_results = []
         for i, model in enumerate(SEVERITY_MODELS):
             feature = action_features[i]
             prediction = model.predict(feature)[0]
             severity_preds.append(prediction)
+            severity_model_results.append({
+                "model": f"Severity Model {i+1}",
+                "prediction": prediction
+            })
 
         # Calculate the average of the severity predictions
         total_severity_preds = len(severity_preds)
@@ -245,14 +255,33 @@ def predict(video_paths: list) -> dict:
         yellow_card_pct = 0
         no_card_pct = 100
 
-    return {
-        "is_foul": foul_pct > no_foul_pct,
-        "foul_confidence": foul_pct,
-        "no_foul_confidence": no_foul_pct,
-        
-        "severity": {
-            "no_card": no_card_pct,
-            "red_card": red_card_pct,
-            "yellow_card": yellow_card_pct
+    # Change the prediction to int
+    foul_model_results = [
+        {
+            "model": result["model"],
+            "prediction": int(result["prediction"])
         }
+        for result in foul_model_results
+    ]
+
+    # Change the severity predictions to int
+    severity_model_results = [
+        {
+            "model": result["model"],
+            "prediction": int(result["prediction"])
+        }
+        for result in severity_model_results
+    ]
+
+    return {
+        "is_foul": bool(foul_pct > no_foul_pct),
+        "foul_confidence": float(foul_pct),
+        "no_foul_confidence": float(no_foul_pct),
+        "foul_model_results": foul_model_results,
+        "severity": {
+            "no_card": float(no_card_pct),
+            "red_card": float(red_card_pct),
+            "yellow_card": float(yellow_card_pct),
+        },
+        "severity_model_results": severity_model_results,
     }

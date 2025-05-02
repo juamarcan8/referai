@@ -23,6 +23,8 @@ class SinglePrediction(BaseModel):
     foul_confidence: float
     no_foul_confidence: float
     severity: dict
+    foul_model_results: List[dict]
+    severity_model_results: List[dict]
 
 class PredictResponse(BaseModel):
     results: List[SinglePrediction]
@@ -30,8 +32,6 @@ class PredictResponse(BaseModel):
 
 @router.post("/predict/{action_id}", response_model=PredictResponse)
 async def predict_endpoint(action_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    results = []
-
     # Verify the action exists and belongs to the current user
     action = db.query(Action).filter(Action.id == action_id, Action.user_id == current_user.id).first()
     if not action:
@@ -49,20 +49,21 @@ async def predict_endpoint(action_id: int, db: Session = Depends(get_db), curren
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
                 temp_video.write(clip.content)
                 video_paths.append(temp_video.name)
-
+        
         # Prediction call
         prediction_results = predict(video_paths)
         print("Prediction results:", prediction_results)
 
-        # Format the results
-        for clip in clips:
-            results.append({
-                "filename": f"clip_{clip.id}.mp4",
-                "is_foul": prediction_results["is_foul"],
-                "foul_confidence": prediction_results["foul_confidence"],
-                "no_foul_confidence": prediction_results["no_foul_confidence"],
-                "severity": prediction_results["severity"]
-            })
+        results = [{
+            "filename": f"clip_{clip.id}.mp4",
+            "is_foul": prediction_results["is_foul"],
+            "foul_confidence": prediction_results["foul_confidence"],
+            "no_foul_confidence": prediction_results["no_foul_confidence"],
+            "severity": prediction_results["severity"],
+            "foul_model_results": prediction_results["foul_model_results"],
+            "severity_model_results": prediction_results["severity_model_results"]
+        }]
+
     finally:
         # Delete temporary files
         for path in video_paths:
