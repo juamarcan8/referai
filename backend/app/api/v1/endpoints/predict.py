@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
-from app.db.models import User, Action, Clip
+from app.db.models import Prediction, User, Action, Clip
 
 from app.db.database import get_db
 from app.auth.jwt_utils import get_current_user
@@ -53,6 +53,22 @@ async def predict_endpoint(action_id: int, db: Session = Depends(get_db), curren
         # Prediction call
         prediction_results = predict(video_paths)
         print("Prediction results:", prediction_results)
+
+        # Save prediction to the database
+        prediction = Prediction(
+            action_id=action.id,
+            is_foul=prediction_results["is_foul"],
+            foul_confidence=prediction_results["foul_confidence"],
+            no_foul_confidence=prediction_results["no_foul_confidence"],
+            foul_model_results=prediction_results["foul_model_results"],  # Ensure this is serialized as JSON
+            no_card_confidence=prediction_results["severity"]["no_card"],
+            red_card_confidence=prediction_results["severity"]["red_card"],
+            yellow_card_confidence=prediction_results["severity"]["yellow_card"],
+            severity_model_results=prediction_results["severity_model_results"]  # Ensure this is serialized as JSON
+        )
+        db.add(prediction)
+        db.commit()
+        db.refresh(prediction)
 
         results = [{
             "filename": f"clip_{clip.id}.mp4",

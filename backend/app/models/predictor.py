@@ -221,6 +221,8 @@ def predict(video_paths: list) -> dict:
     for i, model in enumerate(FOUL_MODELS):
         feature = action_features[i]
         prediction = model.predict(feature)[0]
+        probabilities = model.predict_proba(feature)[0]
+        print(f"Model {i+1} foul probabilities: {probabilities}")
         foul_preds.append(prediction)
         foul_model_results.append({
             "model": f"Foul Model {i+1}",
@@ -238,7 +240,9 @@ def predict(video_paths: list) -> dict:
         severity_model_results = []
         for i, model in enumerate(SEVERITY_MODELS):
             feature = action_features[i]
+            probabilities = model.predict_proba(feature)[0]
             prediction = model.predict(feature)[0]
+            print(f"Model {i+1} severity probabilities: {probabilities}")
             severity_preds.append(prediction)
             severity_model_results.append({
                 "model": f"Severity Model {i+1}",

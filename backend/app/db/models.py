@@ -1,5 +1,6 @@
 from typing import List
 from sqlalchemy import ForeignKey, String, Enum, DateTime, func, Float, LargeBinary
+from sqlalchemy.types import JSON
 import enum
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
 
@@ -37,6 +38,9 @@ class Action(Base):
     clips: Mapped[List["Clip"]] = relationship(
         back_populates="action", cascade="all, delete-orphan"
     )
+    prediction: Mapped["Prediction"] = relationship(
+        back_populates="action", uselist=False, cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"Action(id={self.id!r})"
@@ -55,15 +59,23 @@ class Prediction(Base):
     __tablename__ = "prediction"
     id: Mapped[int] = mapped_column(primary_key=True)
     action_id: Mapped[int] = mapped_column(ForeignKey("action.id"))
-    action: Mapped["Action"] = relationship()
+    action: Mapped["Action"] = relationship(back_populates="prediction")
 
-    is_foul: Mapped[FoulPrediction] = mapped_column(Enum(FoulPrediction), nullable=False)
-    foul_prediction: Mapped[float] = mapped_column(Float, nullable=False)
-    
-    severity: Mapped[SeverityPrediction] = mapped_column(Enum(SeverityPrediction), nullable=False)
+    # Foul-related fields
+    is_foul: Mapped[bool] = mapped_column(nullable=False)
+    foul_confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    no_foul_confidence: Mapped[float] = mapped_column(Float, nullable=False)
+
+    # Store foul_model_results as JSON
+    foul_model_results: Mapped[List[dict]] = mapped_column(JSON, nullable=False)
+
+    # Severity-related fields
     no_card_confidence: Mapped[float] = mapped_column(Float, nullable=False)
     red_card_confidence: Mapped[float] = mapped_column(Float, nullable=False)
     yellow_card_confidence: Mapped[float] = mapped_column(Float, nullable=False)
 
+    # Store severity_model_results as JSON
+    severity_model_results: Mapped[List[dict]] = mapped_column(JSON, nullable=False)
+
     def __repr__(self) -> str:
-        return f"Prediction(id={self.id!r}, action_id={self.action_id!r}, is_foul={self.is_foul!r}, severity={self.severity!r})"
+        return f"Prediction(id={self.id!r}, action_id={self.action_id!r})"
