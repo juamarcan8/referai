@@ -14,6 +14,13 @@ async def upload_clips(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Validate the number of files
+    if len(files) < 2 or len(files) > 4:
+        raise HTTPException(
+            status_code=400,
+            detail="An action must have between 2 and 4 clips."
+        )
+
     # 1. Deletes existing actions from the user
     previous_actions = db.query(Action).filter(Action.user_id == current_user.id).all()
     for action in previous_actions:
