@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List
 from sqlalchemy.orm import Session
-from app.db.models import User, Action, Clip
+from app.db.models import Prediction, User, Action, Clip
 from app.db.database import get_db
 from app.auth.jwt_utils import get_current_user
 import base64
@@ -14,9 +14,17 @@ async def upload_clips(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Validate the number of files
+    if len(files) < 2 or len(files) > 4:
+        raise HTTPException(
+            status_code=400,
+            detail="An action must have between 2 and 4 clips."
+        )
+
     # 1. Deletes existing actions from the user
     previous_actions = db.query(Action).filter(Action.user_id == current_user.id).all()
     for action in previous_actions:
+        db.query(Prediction).filter(Prediction.action_id == action.id).delete()
         db.query(Clip).filter(Clip.action_id == action.id).delete()
     db.query(Action).filter(Action.user_id == current_user.id).delete()
     db.commit()
@@ -28,7 +36,6 @@ async def upload_clips(
     db.refresh(action)
 
     for file in files:
-        print(f"Received file: {file.filename}")
         content = await file.read()
         clip = Clip(
             action_id=action.id,

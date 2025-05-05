@@ -2,6 +2,9 @@
 node_modules/
 .pnpm/
 
+venv
+.env
+
 # Build outputs
 dist/
 build/
