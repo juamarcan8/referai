@@ -41,6 +41,12 @@ async def predict_endpoint(action_id: int, db: Session = Depends(get_db), curren
     clips = db.query(Clip).filter(Clip.action_id == action.id).all()
     if not clips:
         raise HTTPException(status_code=404, detail="No clips found for this action.")
+    
+    # Delete the previous prediction if it exists
+    existing_prediction = db.query(Prediction).filter(Prediction.action_id == action.id).first()
+    if existing_prediction:
+        db.delete(existing_prediction)
+        db.commit()
 
     # Creates temporary files for all clips
     video_paths = []
@@ -87,3 +93,37 @@ async def predict_endpoint(action_id: int, db: Session = Depends(get_db), curren
                 os.remove(path)
 
     return {"results": results}
+
+@router.get("/predict/{action_id}", response_model=PredictResponse)
+async def get_prediction(
+    action_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Verificar que la acción existe y pertenece al usuario
+    action = db.query(Action).filter(Action.id == action_id, Action.user_id == current_user.id).first()
+    if not action:
+        raise HTTPException(status_code=404, detail="Action not found or access denied")
+
+    # Obtener predicción única asociada a esta acción
+    prediction = db.query(Prediction).filter(Prediction.action_id == action_id).first()
+    if not prediction:
+        raise HTTPException(status_code=404, detail="No prediction found for this action")
+
+    # Construir la respuesta en el mismo formato que el POST
+    result = {
+        "filename": f"action_{action_id}.mp4",  # o algún nombre simbólico
+        "is_foul": prediction.is_foul,
+        "foul_confidence": prediction.foul_confidence,
+        "no_foul_confidence": prediction.no_foul_confidence,
+        "severity": {
+            "no_card": prediction.no_card_confidence,
+            "red_card": prediction.red_card_confidence,
+            "yellow_card": prediction.yellow_card_confidence
+        },
+        "foul_model_results": prediction.foul_model_results,
+        "severity_model_results": prediction.severity_model_results
+    }
+
+    return {"results": [result]}
+

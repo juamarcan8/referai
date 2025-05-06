@@ -18,12 +18,13 @@ export default function MainPage() {
     const actionId = localStorage.getItem("last_action_id");
     const token = localStorage.getItem("token");
 
+    setLoading(true);
+
     if (!actionId || !token) {
       alert("User not authenticated or action ID not found");
       return;
     }
 
-    setLoading(true);
     try {
       const response = await fetch(`${API_URL}/v1/predict/${actionId}`, {
         method: "POST",
@@ -56,8 +57,6 @@ export default function MainPage() {
 
       setIsLoading(true);
 
-      //localStorage.removeItem("last_action_id");
-
       const token = localStorage.getItem("token");
       if (!token) {
         alert("User not authenticated");
@@ -84,6 +83,25 @@ export default function MainPage() {
         });
 
         setSelectedVideos(videoURLs);
+
+        // 2. Fetch existing predictions
+        const predRes = await fetch(`${API_URL}/v1/predict/${stored}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+    
+        if (predRes.ok) {
+          const predData: PredictResponse = await predRes.json();
+          if (predData.results && predData.results.length > 0) {
+            setPredictions(predData.results);
+          }
+        } else if (predRes.status !== 404) {
+          const err = await predRes.json();
+          console.warn("Prediction fetch error:", err.detail);
+        }
+
       } catch (error) {
         console.error("Error fetching clips:", error);
         alert("Error fetching clips: " + error.message);
@@ -277,9 +295,10 @@ export default function MainPage() {
 
 
           {/* Run Prediction Button */}
+          <div className="flex justify-center items-center">
           <button
             onClick={handlePrediction}
-            disabled={loading || selectedVideos.length === 0}
+            disabled={loading || selectedVideos.length === 0} 
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -310,6 +329,7 @@ export default function MainPage() {
               "Run Prediction"
             )}
           </button>
+        </div>
         </div>
       </div>
     </>

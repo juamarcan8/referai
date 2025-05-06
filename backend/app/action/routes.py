@@ -46,6 +46,25 @@ async def upload_clips(
     db.commit()
     return {"message": "Clips uploaded", "action_id": action.id}
 
+@router.get("/action/last")
+def get_last_action(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    print(f"Current user: {current_user.email}")  # Agrega un registro para verificar el usuario
+    action = db.query(Action).filter(Action.user_id == current_user.id).order_by(Action.created_at.desc()).first()
+    if not action:
+        raise HTTPException(status_code=404, detail="No actions found for this user.")
+
+    clips = db.query(Clip).filter(Clip.action_id == action.id).all()
+    return {
+        "action_id": action.id,
+        "clips": [
+            {
+                "id": clip.id,
+                "content": base64.b64encode(clip.content).decode('utf-8')
+            }
+            for clip in clips
+        ]
+    }
+
 @router.get("/action/{action_id}")
 def get_action_clips(action_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     action = db.query(Action).filter(Action.id == action_id, Action.user_id == current_user.id).first()
