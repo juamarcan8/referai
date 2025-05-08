@@ -147,7 +147,7 @@ export default function UploadPage() {
               </div>
             ) : (
               <p className="text-gray-500 dark:text-gray-300">
-                No previous actions found.
+                No previous actions found
               </p>
             )}
           </div>
