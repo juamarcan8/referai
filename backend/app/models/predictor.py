@@ -163,7 +163,6 @@ def extract_features_slowfast(video_path, model):
 
 def extract_features_mvit(video_path, start_frame, end_frame, model):
     frames = preprocess_video_for_mvit(video_path, start_frame, end_frame)
-    #print("Frames tensor shape:", frames.shape)
     with torch.no_grad():
         features = model(frames)
     return features.cpu().numpy()
