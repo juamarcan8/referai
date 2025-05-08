@@ -2,29 +2,39 @@ import { useState } from "react";
 import { register } from "../services/auth.ts";
 import React from "react";
 
+import { PenLine } from "lucide-react";
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(email, password, confirmPassword);
-    if (!email || !password || !confirmPassword) {
-      alert("Please fill in all fields");
-      return;
-    }
+    setLoading(true);
+    setError("");
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
     try {
-      const response = await register(email, password);
-      alert("Registration successful! Please log in.");
-      window.location.href = "/login";
-    } catch (error) {
-      alert("Registration failed. Please try again.");
+      const { ok, data } = await register(email, password, confirmPassword);
+
+      if (ok) {
+        window.location.href = "/login";
+      } else {
+        throw new Error(data.detail || "Registration failed");
+      }
+    } catch (err: any) {
+      if (err.status === 422 && err.data?.detail) {
+        const messages = err.data.detail.map((d: any) => d.msg).join(" | ");
+        setError("Validation error: " + messages);
+      } else if (err.data?.detail) {
+        setError("Error: " + err.data.detail);
+      } else {
+        setError("Registration failed: " + err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,11 +98,17 @@ export default function RegisterPage() {
             />
           </div>
 
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-2 ${loading ? "bg-green-400" : "bg-green-600 hover:bg-green-700"}  text-white py-2 rounded-lg transition-colors font-semibold`}
           >
-            Register
+            <PenLine className="w-5 h-5" />
+            {loading ? "Creating account..." : "Create Account"}
           </button>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
