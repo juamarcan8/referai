@@ -1,7 +1,7 @@
-// components/Navbar.tsx
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 const Navbar = () => {
   const { logout } = useAuth();
@@ -13,14 +13,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gray-900 text-white px-4 py-2 flex justify-between items-center">
-      <h1 className="text-xl font-semibold">referai</h1>
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
-      >
-        Logout
-      </button>
+    <nav className="bg-gray-900 text-white shadow-md">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          <span className="text-indigo-400">refer</span>ai
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </nav>
   );
 };
