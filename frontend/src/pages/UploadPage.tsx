@@ -10,16 +10,7 @@ export default function UploadPage() {
     const navigate = useNavigate();
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const [lastAction, setLastAction] = useState<{ action_id: number; clips: { id: number; content: string }[] } | null>(null); // Adjust type as needed
-
-    const exampleVideos = [
-        { id: 1, url: "/videos/SampleVideo_360x240_1mb.mp4", label: "Foul Example 1" },
-        { id: 2, url: "/videos/SampleVideo_720x480_1mb.mp4", label: "No Foul Example 1" },
-    ];
-
-    useEffect(() => {
-        console.log("Selected videos changed:", selectedVideos);
-    }, [selectedVideos]);
+    const [lastAction, setLastAction] = useState<{ action_id: number; clips: { id: number; content: string }[] } | null>(null);
 
     useEffect(() => {
         const fetchLastAction = async () => {
@@ -77,7 +68,6 @@ export default function UploadPage() {
                 }
 
                 const res = await uploadClips(uploadedFiles, token);
-                console.log("Uploaded to action:", res.action_id);
                 localStorage.setItem("last_action_id", res.action_id);
                 navigate("/");
             } catch (error) {

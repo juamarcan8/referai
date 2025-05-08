@@ -58,7 +58,6 @@ async def predict_endpoint(action_id: int, db: Session = Depends(get_db), curren
         
         # Prediction call
         prediction_results = predict(video_paths)
-        print("Prediction results:", prediction_results)
 
         # Save prediction to the database
         prediction = Prediction(

@@ -140,17 +140,14 @@ export default function MainPage() {
   useEffect(() => {
     const handleSync = () => {
       if (videoRefs.current[0]) {
-        // Actualiza el estado con el tiempo actual del primer video
         setCurrentTime(videoRefs.current[0].currentTime);
       }
     };
 
-    // Agrega el evento `timeupdate` a todos los videos
     videoRefs.current.forEach((video) => {
       video.addEventListener("timeupdate", handleSync);
     });
 
-    // Limpia los eventos al desmontar el componente
     return () => {
       videoRefs.current.forEach((video) => {
         video.removeEventListener("timeupdate", handleSync);
@@ -225,7 +222,6 @@ export default function MainPage() {
           {/* Prediction Result */}
           <div className="mt-6">
             {loading ? (
-              // Loader (Skeleton)
               <div className="mx-auto w-full max-w-md rounded-xl border border-blue-300 p-6 bg-slate-800 shadow animate-pulse">
                 <div className="space-y-4">
                   <div className="h-4 bg-gray-600 rounded w-3/4"></div>

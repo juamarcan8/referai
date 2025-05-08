@@ -48,7 +48,6 @@ async def upload_clips(
 
 @router.get("/action/last")
 def get_last_action(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    print(f"Current user: {current_user.email}")  # Agrega un registro para verificar el usuario
     action = db.query(Action).filter(Action.user_id == current_user.id).order_by(Action.created_at.desc()).first()
     if not action:
         raise HTTPException(status_code=404, detail="No actions found for this user.")
