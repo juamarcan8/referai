@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useSelectedVideos } from "../context/SelectedVideosContext";
 import { PredictResponse, SinglePrediction } from "../api/predict";
 import Navbar from "../components/Navbar";
 
@@ -41,7 +40,7 @@ export default function MainPage() {
 
       const data: PredictResponse = await response.json();
       setPredictions(data.results);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Prediction error", err);
       alert("Error running prediction: " + err.message);
     } finally {
@@ -102,7 +101,7 @@ export default function MainPage() {
           console.warn("Prediction fetch error:", err.detail);
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching clips:", error);
         alert("Error fetching clips: " + error.message);
       } finally {
@@ -176,6 +175,7 @@ export default function MainPage() {
                   }`}
               >
                 <video
+                  data-testid={`video-${index}`}
                   muted
                   src={video}
                   controls={false}
