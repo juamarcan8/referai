@@ -6,78 +6,71 @@ import Navbar from "../components/Navbar";
 import { getLastAction } from "../api/action";
 
 export default function UploadPage() {
-    const { selectedVideos, setSelectedVideos } = useSelectedVideos();
-    const navigate = useNavigate();
-    const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const [lastAction, setLastAction] = useState<{ action_id: number; clips: { id: number; content: string }[] } | null>(null);
+  const { selectedVideos, setSelectedVideos } = useSelectedVideos();
+  const navigate = useNavigate();
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [lastAction, setLastAction] = useState<{ action_id: number; clips: { id: number; content: string }[] } | null>(null);
 
-    useEffect(() => {
-        const fetchLastAction = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                if (!token) throw new Error("User not authenticated");
+  useEffect(() => {
+    const fetchLastAction = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("User not authenticated");
 
-                const data = await getLastAction(token);
-                setLastAction(data);
-            } catch (error) {
-                console.error("Failed to fetch last action:", error);
-            }
-        };
+        const data = await getLastAction(token);
+        setLastAction(data);
+      } catch (error: any) {
+        console.error("Failed to fetch last action:", error);
+      }
+    };
 
-        fetchLastAction();
-    }, []);
+    fetchLastAction();
+  }, []);
 
-    // Handle file uploads
-    const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (files) {
-            const fileArray = Array.from(files).slice(0, 4); // Limit to 4 files
-            setUploadedFiles(fileArray);
+  // Handle file uploads
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files).slice(0, 4); // Limit to 4 files
+      setUploadedFiles(fileArray);
 
-            const objectURLs = fileArray.map(file => URL.createObjectURL(file));
-            setSelectedVideos(prev => {
-                prev.forEach(url => URL.revokeObjectURL(url));  // Clear previous URLs
-                return objectURLs;
-            });
+      const objectURLs = fileArray.map(file => URL.createObjectURL(file));
+      setSelectedVideos(prev => {
+        prev.forEach(url => URL.revokeObjectURL(url));  // Clear previous URLs
+        return objectURLs;
+      });
+    }
+  };
+
+  // Remove a selected video
+  const removeClip = (indexToRemove: number): void => {
+    setSelectedVideos((prev: string[]) =>
+      prev.filter((_, idx) => idx !== indexToRemove)
+    );
+  };
+
+  const handleContinue = async () => {
+    if (selectedVideos.length >= 2 && selectedVideos.length <= 4) {
+      try {
+        const token = localStorage.getItem("token");
+
+        // Validar que sea un JWT real
+        if (!token || !token.includes('.') || token.split('.').length !== 3) {
+          throw new Error("User not authenticated or token malformed");
         }
-    };
 
-    // Handle selecting an example video
-    const handleExampleSelect = (video: { url: string }) => {
-        if (selectedVideos.length < 4) {
-            setSelectedVideos(prev => [...prev, video.url]);
-        }
-    };
+        const res = await uploadClips(uploadedFiles, token);
+        localStorage.setItem("last_action_id", res.action_id);
+        navigate("/");
+      } catch (error: any) {
+        console.error("Upload failed", error);
+        alert("Upload failed: " + error.message);
+      }
+    }
+  };
 
-    // Remove a selected video
-    const removeClip = (indexToRemove: number): void => {
-        setSelectedVideos((prev: string[]) =>
-            prev.filter((_, idx) => idx !== indexToRemove)
-        );
-    };
-
-    const handleContinue = async () => {
-        if (selectedVideos.length >= 2 && selectedVideos.length <= 4) {
-            try {
-                const token = localStorage.getItem("token");
-
-                // Validar que sea un JWT real
-                if (!token || !token.includes('.') || token.split('.').length !== 3) {
-                    throw new Error("User not authenticated or token malformed");
-                }
-
-                const res = await uploadClips(uploadedFiles, token);
-                localStorage.setItem("last_action_id", res.action_id);
-                navigate("/");
-            } catch (error) {
-                console.error("Upload failed", error);
-                alert("Upload failed: " + error.message);
-            }
-        }
-    };
-
-    return (
+  return (
     <>
       <Navbar />
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 py-8">
@@ -92,30 +85,30 @@ export default function UploadPage() {
         <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl">
           {/* Upload Area */}
           <div className="flex-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md flex flex-col">
-  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-    Upload Your Clips
-  </h3>
-  <div className="flex-1 flex items-center justify-center border-2 border-dashed border-blue-400 rounded-lg p-6 text-center text-gray-500 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-slate-700 transition">
-    <input
-      type="file"
-      accept="video/*"
-      multiple
-      className="hidden"
-      id="video-upload"
-      onChange={handleUpload}
-    />
-    <label htmlFor="video-upload" className="cursor-pointer block">
-      Drag & drop your videos here or{" "}
-      <span className="text-blue-600 hover:underline">browse</span>
-    </label>
-  </div>
-</div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+              Upload Your Clips
+            </h3>
+            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-blue-400 rounded-lg p-6 text-center text-gray-500 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-slate-700 transition">
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                className="hidden"
+                id="video-upload"
+                onChange={handleUpload}
+                aria-label="Drag & drop your videos here or browse"
+              />
+              <label htmlFor="video-upload" className="cursor-pointer block">
+                Drag & drop your videos here or{" "}
+                <span className="text-blue-600 hover:underline">browse</span>
+              </label>
+            </div>
+          </div>
 
           {/* Last Action Preview */}
           <div
-            className={`flex-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${
-              lastAction ? "hover:bg-slate-700 cursor-pointer" : "opacity-60"
-            } transition`}
+            className={`flex-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${lastAction ? "hover:bg-slate-700 cursor-pointer" : "opacity-60"
+              } transition`}
             onClick={() => {
               if (lastAction) {
                 localStorage.setItem(
@@ -210,11 +203,10 @@ export default function UploadPage() {
         <button
           disabled={selectedVideos.length < 2 || selectedVideos.length > 4}
           onClick={handleContinue}
-          className={`mt-10 px-6 py-3 rounded-lg text-white font-semibold transition ${
-            selectedVideos.length >= 2 && selectedVideos.length <= 4
+          className={`mt-10 px-6 py-3 rounded-lg text-white font-semibold transition ${selectedVideos.length >= 2 && selectedVideos.length <= 4
               ? "bg-green-600 hover:bg-green-700"
               : "bg-gray-400 cursor-not-allowed"
-          }`}
+            }`}
         >
           Continue
         </button>
