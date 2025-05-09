@@ -42,6 +42,10 @@ __pycache__/
 
 # Optional: if using coverage tools
 coverage/
+coverage_report/
+.coverage
+
+test.db
 
 # Optional: if using Jest
 jest-cache/

@@ -5,6 +5,7 @@ from app.auth.routes import router as auth_router
 from app.action.routes import router as action_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.predictor import load_models
+import os
 
 # Models
 FOUL_MODELS = None
@@ -14,6 +15,10 @@ def lifespan(app: FastAPI):
     """
     Lifespan event to load models when the application starts.
     """
+    if os.environ.get("ENV") == "test":
+        yield
+        return
+    
     global FOUL_MODELS, SEVERITY_MODELS
 
     # STARTUP
