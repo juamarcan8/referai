@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt, ExpiredSignatureError
 from app.db.database import get_db
 from app.db.models import User
 from sqlalchemy.orm import Session
@@ -11,16 +11,23 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.now() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_exp": True}
+        )
         return payload
-    except JWTError as e:
-        return None
+    except ExpiredSignatureError:
+        return None # Expired token
+    except JWTError:
+        return None  # Invalid token
     
 def get_current_user(
     authorization: str = Header(...),
