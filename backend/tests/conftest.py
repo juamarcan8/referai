@@ -7,7 +7,7 @@ from sqlalchemy_utils import create_database, database_exists, drop_database
 import pytest_asyncio 
 
 from app.db.database import get_db
-from app.db.models import User, Action, Clip, Prediction, Base
+from app.db.models import Base
 
 import os
 os.environ["ENV"] = "test"

@@ -1,8 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
 import os
-from app.api.v1.api import api_router
 from app.auth.routes import router as auth_router
 from app.action.routes import router as action_router
+from app.predict.routes import router as predict_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.predictor import load_models
 import os
@@ -46,6 +46,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(action_router)
+app.include_router(predict_router)

@@ -26,7 +26,7 @@ export default function MainPage() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/v1/predict/${actionId}`, {
+      const response = await fetch(`${API_URL}/predict/${actionId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -85,7 +85,7 @@ export default function MainPage() {
         setSelectedVideos(videoURLs);
 
         // 2. Fetch existing predictions
-        const predRes = await fetch(`${API_URL}/v1/predict/${stored}`, {
+        const predRes = await fetch(`${API_URL}/predict/${stored}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
