@@ -7,8 +7,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function MainPage() {
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const animationRef = useRef<number | null>(null);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [predictions, setPredictions] = useState<SinglePrediction[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,23 @@ export default function MainPage() {
   };
 
   useEffect(() => {
+    return () => stopAnimation();
+  }, []);
+
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      if (videoRefs.current[0]) {
+        setCurrentTime(videoRefs.current[0].currentTime);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  useEffect(() => {
     const fetchClips = async () => {
       const stored = localStorage.getItem("last_action_id");
       if (!stored) return;
@@ -94,7 +113,7 @@ export default function MainPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-    
+
         if (predRes.ok) {
           const predData: PredictResponse = await predRes.json();
           if (predData.results && predData.results.length > 0) {
@@ -117,26 +136,48 @@ export default function MainPage() {
     fetchClips();
   }, []);
 
-  const togglePlayPause = () => {
-    setIsPlaying((prev) => {
-      const newState = !prev;
-      videoRefs.current.forEach((video) => {
-        if (newState) {
-          video.play();
-        } else {
-          video.pause();
-        }
-      });
-      return newState;
-    });
+  const startAnimation = () => {
+    const update = () => {
+      if (videoRefs.current[0]) {
+        const time = videoRefs.current[0].currentTime;
+        setCurrentTime(time);
+        animationRef.current = requestAnimationFrame(update);
+      }
+    };
+    animationRef.current = requestAnimationFrame(update);
   };
 
+  const stopAnimation = () => {
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  };
+
+
+  const togglePlayPause = () => {
+    const newPlaying = !isPlaying;
+    setIsPlaying(newPlaying);
+
+    videoRefs.current.forEach((video) => {
+      newPlaying ? video.play() : video.pause();
+    });
+
+    if (newPlaying) {
+      startAnimation();
+    } else {
+      stopAnimation();
+    }
+  };
+
+
   const handleTimeUpdate = (time: number) => {
-    setCurrentTime(time);
     videoRefs.current.forEach((video) => {
       video.currentTime = time;
     });
+    setCurrentTime(time);
   };
+
 
   useEffect(() => {
     const handleSync = () => {
@@ -173,21 +214,26 @@ export default function MainPage() {
             selectedVideos.map((video, index) => (
               <div
                 key={index}
-                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
-                  }`}
+                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""}`}
               >
                 <video
-                  data-testid={`video-${index}`}
                   muted
                   src={video}
                   controls={false}
+                  onLoadedMetadata={(e) => {
+                    if (!videoDuration && !isNaN(e.currentTarget.duration)) {
+                      setVideoDuration(e.currentTarget.duration);
+                    }
+                  }}
                   ref={(el) => {
                     if (el) videoRefs.current[index] = el;
                   }}
                   className="w-full h-full object-cover"
                 />
+
               </div>
             ))
+
           )}
         </div>
 
@@ -199,13 +245,17 @@ export default function MainPage() {
             <div className="col-span-2 flex items-center">
               <input
                 type="range"
-                min="0"
-                max={videoRefs.current[0]?.duration || 0}
+                min={0}
+                max={videoDuration || 0}
+                step={0.01}
                 value={currentTime}
-                onChange={(e) => handleTimeUpdate(Number(e.target.value))}
+                onInput={(e) => handleTimeUpdate(Number(e.currentTarget.value))}
                 className="w-full accent-blue-700"
-                aria-label="Video progress"
               />
+
+
+
+
             </div>
 
             {/* Play/Pause Button */}
@@ -278,8 +328,8 @@ export default function MainPage() {
                           {modelResult.prediction === 0
                             ? "No Card"
                             : modelResult.prediction === 1
-                            ? "Red Card"
-                            : "Yellow Card"}
+                              ? "Red Card"
+                              : "Yellow Card"}
                         </li>
                       ))}
                     </ul>
