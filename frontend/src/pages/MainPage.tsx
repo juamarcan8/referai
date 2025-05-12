@@ -1,17 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PredictResponse, SinglePrediction } from "../api/predict";
 import Navbar from "../components/Navbar";
+import Toast from "../components/Toast";  // Asegúrate de que este componente esté importado
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function MainPage() {
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const animationRef = useRef<number | null>(null);
   const videoRefs = useRef<HTMLVideoElement[]>([]);
   const [predictions, setPredictions] = useState<SinglePrediction[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
 
   const handlePrediction = async () => {
     const actionId = localStorage.getItem("last_action_id");
@@ -20,7 +24,8 @@ export default function MainPage() {
     setLoading(true);
 
     if (!actionId || !token) {
-      alert("User not authenticated or action ID not found");
+      setToast({ message: "User not authenticated or action ID not found", type: "error" });
+      setLoading(false);
       return;
     }
 
@@ -40,15 +45,32 @@ export default function MainPage() {
 
       const data: PredictResponse = await response.json();
       setPredictions(data.results);
+      setToast({ message: "Prediction successfully run!", type: "success" });
     } catch (err: any) {
       console.error("Prediction error", err);
-      alert("Error running prediction: " + err.message);
+      setToast({ message: `Error running prediction: ${err.message}`, type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  // Retrieves the id of the selected action from localStorage
+  useEffect(() => {
+    return () => stopAnimation();
+  }, []);
+
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      if (videoRefs.current[0]) {
+        setCurrentTime(videoRefs.current[0].currentTime);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
   useEffect(() => {
     const fetchClips = async () => {
       const stored = localStorage.getItem("last_action_id");
@@ -58,7 +80,8 @@ export default function MainPage() {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("User not authenticated");
+        setToast({ message: "User not authenticated", type: "error" });
+        setIsLoading(false);
         return;
       }
 
@@ -90,7 +113,7 @@ export default function MainPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-    
+
         if (predRes.ok) {
           const predData: PredictResponse = await predRes.json();
           if (predData.results && predData.results.length > 0) {
@@ -99,11 +122,12 @@ export default function MainPage() {
         } else if (predRes.status !== 404) {
           const err = await predRes.json();
           console.warn("Prediction fetch error:", err.detail);
+          setToast({ message: `Prediction fetch error: ${err.detail}`, type: "error" });
         }
 
       } catch (error: any) {
         console.error("Error fetching clips:", error);
-        alert("Error fetching clips: " + error.message);
+        setToast({ message: `Error fetching clips: ${error.message}`, type: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -112,30 +136,49 @@ export default function MainPage() {
     fetchClips();
   }, []);
 
-  // Play or pause all videos
-  const togglePlayPause = () => {
-    setIsPlaying((prev) => {
-      const newState = !prev;
-      videoRefs.current.forEach((video) => {
-        if (newState) {
-          video.play();
-        } else {
-          video.pause();
-        }
-      });
-      return newState;
-    });
+  const startAnimation = () => {
+    const update = () => {
+      if (videoRefs.current[0]) {
+        const time = videoRefs.current[0].currentTime;
+        setCurrentTime(time);
+        animationRef.current = requestAnimationFrame(update);
+      }
+    };
+    animationRef.current = requestAnimationFrame(update);
   };
 
-  // Sync all videos to the same time
+  const stopAnimation = () => {
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  };
+
+
+  const togglePlayPause = () => {
+    const newPlaying = !isPlaying;
+    setIsPlaying(newPlaying);
+
+    videoRefs.current.forEach((video) => {
+      newPlaying ? video.play() : video.pause();
+    });
+
+    if (newPlaying) {
+      startAnimation();
+    } else {
+      stopAnimation();
+    }
+  };
+
+
   const handleTimeUpdate = (time: number) => {
-    setCurrentTime(time);
     videoRefs.current.forEach((video) => {
       video.currentTime = time;
     });
+    setCurrentTime(time);
   };
 
-  // Update the current time when any video updates
+
   useEffect(() => {
     const handleSync = () => {
       if (videoRefs.current[0]) {
@@ -171,24 +214,28 @@ export default function MainPage() {
             selectedVideos.map((video, index) => (
               <div
                 key={index}
-                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""
-                  }`}
+                className={`rounded-md overflow-hidden ${selectedVideos.length === 3 && index === 2 ? "col-span-2" : ""}`}
               >
                 <video
-                  data-testid={`video-${index}`}
                   muted
                   src={video}
                   controls={false}
+                  onLoadedMetadata={(e) => {
+                    if (!videoDuration && !isNaN(e.currentTarget.duration)) {
+                      setVideoDuration(e.currentTarget.duration);
+                    }
+                  }}
                   ref={(el) => {
                     if (el) videoRefs.current[index] = el;
                   }}
                   className="w-full h-full object-cover"
                 />
+
               </div>
             ))
+
           )}
         </div>
-
 
         {/* Side Panel */}
         <div className="flex-[1] p-4 h-full bg-white dark:bg-slate-900 overflow-auto">
@@ -198,13 +245,17 @@ export default function MainPage() {
             <div className="col-span-2 flex items-center">
               <input
                 type="range"
-                min="0"
-                max={videoRefs.current[0]?.duration || 0}
+                min={0}
+                max={videoDuration || 0}
+                step={0.01}
                 value={currentTime}
-                onChange={(e) => handleTimeUpdate(Number(e.target.value))}
+                onInput={(e) => handleTimeUpdate(Number(e.currentTarget.value))}
                 className="w-full accent-blue-700"
-                aria-label="Video progress"
               />
+
+
+
+
             </div>
 
             {/* Play/Pause Button */}
@@ -288,47 +339,53 @@ export default function MainPage() {
             )}
           </div>
 
-
-
           {/* Run Prediction Button */}
           <div className="flex justify-center items-center">
-          <button
-            onClick={handlePrediction}
-            disabled={loading || selectedVideos.length === 0} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-                Predicting...
-              </>
-            ) : (
-              "Run Prediction"
-            )}
-          </button>
-        </div>
+            <button
+              onClick={handlePrediction}
+              disabled={loading || selectedVideos.length === 0}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Predicting...
+                </>
+              ) : (
+                "Run Prediction"
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </>
 
+      {/* Show errors */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
   );
 }

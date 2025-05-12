@@ -11,6 +11,17 @@ import os
 FOUL_MODELS = None
 SEVERITY_MODELS = None
 
+def print_ascii_art():
+    logo = r"""
+     ____  _____ _____ _____ ____      _    ___ 
+    |  _ \| ____|  ___| ____|  _ \    / \  |_ _|
+    | |_) |  _| | |_  |  _| | |_) |  / _ \  | | 
+    |  _ <| |___|  _| | |___|  _ <  / ___ \ | | 
+    |_| \_\_____|_|   |_____|_| \_\/_/   \_\___|
+                    REFERAI API
+    """
+    print(logo)
+
 def lifespan(app: FastAPI):
     """
     Lifespan event to load models when the application starts.
@@ -18,6 +29,8 @@ def lifespan(app: FastAPI):
     if os.environ.get("ENV") == "test":
         yield
         return
+    
+    print_ascii_art()
     
     global FOUL_MODELS, SEVERITY_MODELS
 

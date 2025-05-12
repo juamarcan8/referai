@@ -44,7 +44,7 @@ async def upload_clips(
         db.add(clip)
 
     db.commit()
-    return {"message": "Clips uploaded", "action_id": action.id}
+    return {"message": "Clips uploaded successfully.", "action_id": action.id}
 
 @router.get("/action/last")
 def get_last_action(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

@@ -11,6 +11,7 @@ import { PrivateRoute } from "./auth/PrivateRoute";
 
 export default function App() {
   return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
     <SelectedVideosProvider>
       <Router>
         <Routes>
@@ -34,5 +35,6 @@ export default function App() {
         </Routes>
       </Router>
     </SelectedVideosProvider>
+    </div>
   );
 }

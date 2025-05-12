@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { register } from "../services/auth.ts";
+import { register } from "../services/auth";
 import React from "react";
 
 import { PenLine } from "lucide-react";
@@ -9,12 +9,12 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setErrors([]);
 
     try {
       const { ok, data } = await register(email, password, confirmPassword);
@@ -26,12 +26,15 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       if (err.status === 422 && err.data?.detail) {
-        const messages = err.data.detail.map((d: any) => d.msg).join(" | ");
-        setError("Validation error: " + messages);
+        const messages = err.data.detail.map((d: any) =>
+          d.msg.replace(/^Value error,?\s*/i, "")
+        );
+
+        setErrors(messages);
       } else if (err.data?.detail) {
-        setError("Error: " + err.data.detail);
+        setErrors([err.data.detail]);
       } else {
-        setError("Registration failed: " + err.message);
+        setErrors(["Registration failed. Please try again."]);
       }
     } finally {
       setLoading(false);
@@ -39,7 +42,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4">
+    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen px-4">
       {/* Intro Panel */}
       <div className="flex-1 basis-1/3 p-6 text-center md:text-right">
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-500 mb-4 animate-fade-in">
@@ -101,8 +104,12 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+          {errors.length > 0 && (
+            <ul className="text-red-500 text-sm list-disc list-inside">
+              {errors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
           )}
 
           <button

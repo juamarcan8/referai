@@ -4,13 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { uploadClips } from "../api/upload";
 import Navbar from "../components/Navbar";
 import { getLastAction } from "../api/action";
+import Toast from "../components/Toast";
 
 export default function UploadPage() {
   const { selectedVideos, setSelectedVideos } = useSelectedVideos();
   const navigate = useNavigate();
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [lastAction, setLastAction] = useState<{ action_id: number; clips: { id: number; content: string }[] } | null>(null);
+  const [lastAction, setLastAction] = useState<{
+    action_id: number;
+    clips: { id: number; content: string }[];
+  } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLastAction = async () => {
@@ -35,9 +40,9 @@ export default function UploadPage() {
       const fileArray = Array.from(files).slice(0, 4); // Limit to 4 files
       setUploadedFiles(fileArray);
 
-      const objectURLs = fileArray.map(file => URL.createObjectURL(file));
-      setSelectedVideos(prev => {
-        prev.forEach(url => URL.revokeObjectURL(url));  // Clear previous URLs
+      const objectURLs = fileArray.map((file) => URL.createObjectURL(file));
+      setSelectedVideos((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url)); // Clear previous URLs
         return objectURLs;
       });
     }
@@ -55,8 +60,7 @@ export default function UploadPage() {
       try {
         const token = localStorage.getItem("token");
 
-        // Validar que sea un JWT real
-        if (!token || !token.includes('.') || token.split('.').length !== 3) {
+        if (!token || !token.includes(".") || token.split(".").length !== 3) {
           throw new Error("User not authenticated or token malformed");
         }
 
@@ -65,15 +69,20 @@ export default function UploadPage() {
         navigate("/");
       } catch (error: any) {
         console.error("Upload failed", error);
-        alert("Upload failed: " + error.message);
+        setErrorMessage(
+          error?.response?.data?.detail ||
+            "An error occurred while uploading your clips. Please try again."
+        );
       }
+    } else {
+      setErrorMessage("Please select between 2 and 4 clips to continue.");
     }
   };
 
   return (
     <>
       <Navbar />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 py-8">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8">
         {/* Page Titles */}
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
           Clip Selection
@@ -81,6 +90,15 @@ export default function UploadPage() {
         <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-8">
           Select between 2 and 4 clips to continue
         </h2>
+
+        {/* Toast Error Message */}
+        {errorMessage && (
+          <Toast
+            message={errorMessage}
+            type="error"
+            onClose={() => setErrorMessage(null)}
+          />
+        )}
 
         <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl">
           {/* Upload Area */}
@@ -107,14 +125,12 @@ export default function UploadPage() {
 
           {/* Last Action Preview */}
           <div
-            className={`flex-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${lastAction ? "hover:bg-slate-700 cursor-pointer" : "opacity-60"
-              } transition`}
+            className={`flex-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${
+              lastAction ? "hover:bg-slate-700 cursor-pointer" : "opacity-60"
+            } transition`}
             onClick={() => {
               if (lastAction) {
-                localStorage.setItem(
-                  "last_action_id",
-                  lastAction.action_id.toString()
-                );
+                localStorage.setItem("last_action_id", lastAction.action_id.toString());
                 navigate("/");
               }
             }}
@@ -177,36 +193,15 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Upload Progress */}
-        {uploadProgress.length > 0 && (
-          <div className="w-full max-w-2xl mt-8">
-            <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Upload Progress
-            </h4>
-            <div className="space-y-2">
-              {uploadProgress.map((progress, idx) => (
-                <div
-                  key={idx}
-                  className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3"
-                >
-                  <div
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Continue Button */}
         <button
           disabled={selectedVideos.length < 2 || selectedVideos.length > 4}
           onClick={handleContinue}
-          className={`mt-10 px-6 py-3 rounded-lg text-white font-semibold transition ${selectedVideos.length >= 2 && selectedVideos.length <= 4
+          className={`mt-10 px-6 py-3 rounded-lg text-white font-semibold transition ${
+            selectedVideos.length >= 2 && selectedVideos.length <= 4
               ? "bg-green-600 hover:bg-green-700"
               : "bg-gray-400 cursor-not-allowed"
-            }`}
+          }`}
         >
           Continue
         </button>
