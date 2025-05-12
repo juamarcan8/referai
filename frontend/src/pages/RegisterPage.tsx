@@ -42,7 +42,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4">
+    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen px-4">
       {/* Intro Panel */}
       <div className="flex-1 basis-1/3 p-6 text-center md:text-right">
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-500 mb-4 animate-fade-in">

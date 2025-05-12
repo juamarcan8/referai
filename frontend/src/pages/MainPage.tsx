@@ -378,7 +378,7 @@ export default function MainPage() {
         </div>
       </div>
 
-      {/* Mostrar Toasts de Errores o Exitos */}
+      {/* Show errors */}
       {toast && (
         <Toast
           message={toast.message}

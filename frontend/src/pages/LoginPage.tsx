@@ -50,7 +50,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 overflow-hidden">
+    <div className="relative flex flex-col md:flex-row items-center justify-center min-h-screen px-4 overflow-hidden">
 
       {/* Intro Panel */}
       <div className="relative z-10 flex-1 basis-1/3 p-6 text-center md:text-right">
