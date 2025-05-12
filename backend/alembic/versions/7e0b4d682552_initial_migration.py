@@ -1,8 +1,8 @@
-"""updates prediction relationship with action
+"""Initial migration
 
-Revision ID: 1b114c183458
-Revises: 4b457625703a
-Create Date: 2025-05-05 14:13:53.987446
+Revision ID: 7e0b4d682552
+Revises: 
+Create Date: 2025-05-12 18:50:35.404991
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1b114c183458'
-down_revision: Union[str, None] = '4b457625703a'
+revision: str = '7e0b4d682552'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
