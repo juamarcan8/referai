@@ -1,6 +1,6 @@
 import { useState } from "react";
 import React from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, OctagonAlert } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -28,22 +28,30 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem("token", data.access_token);
         window.location.href = "/upload";
       } else {
-        throw new Error(data.detail || "Login failed");
+        if (response.status === 401) {
+          setError("Incorrect email or password. Please try again.");
+        } else if (response.status >= 500) {
+          setError("Server error. Please try again later.");
+        } else {
+          setError(data.detail || "Login failed. Please check your credentials.");
+        }
       }
-    } catch (error: any) {
-      setError("Invalid credentials: " + error.message);
-    } finally {
+    } catch (error) {
+      setError("Unable to connect. Please check your internet connection.");
+    }
+    finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="relative flex flex-col md:flex-row items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 px-4 overflow-hidden">
-      
+
       {/* Intro Panel */}
       <div className="relative z-10 flex-1 basis-1/3 p-6 text-center md:text-right">
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500 mb-4">
@@ -91,15 +99,14 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <div className="flex items-center justify-center gap-2"><OctagonAlert className="w-5 h-5 text-red-500"/><p className="text-red-500 text-sm text-center">{error}</p></div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 ${
-              loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-            } text-white py-2 rounded-lg transition-colors font-semibold`}
+            className={`w-full flex items-center justify-center gap-2 ${loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+              } text-white py-2 rounded-lg transition-colors font-semibold`}
           >
             <LogIn className="w-5 h-5" />
             {loading ? "Logging in..." : "Log in"}
