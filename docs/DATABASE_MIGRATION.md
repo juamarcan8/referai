@@ -7,7 +7,7 @@ This document describes how to manage database migrations using Alembic and SQLA
 - Python 3.x installed.
 - Virtual environment configured:
     ```bash
-    python venv -m venv
+    python -m venv venv
     ```
 - Alembic and SQLAlchemy installed:
 
