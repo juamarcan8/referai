@@ -74,3 +74,5 @@ After following the previous steps, the application will be correctly installed 
 - Access the API documentation at [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs) (or the appropriate URL based on your configuration).
 
 You're all set to start using and testing the application! If you encounter any issues, feel free to refer back to the relevant sections of the documentation or check the error messages for guidance.
+
+For more detailed information, troubleshooting, or if you need to go back to the main documentation, please refer to the [README.md](../README.md).
