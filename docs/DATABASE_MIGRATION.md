@@ -1,4 +1,4 @@
-# Database Migration Documentation
+# Database Migration Guide for *referai*
 
 This document describes how to manage database migrations using Alembic and SQLAlchemy.
 
@@ -158,4 +158,5 @@ This command will show a detailed and ordered history of the implemented migrati
 - **Version Control:** Keep your migrations under version control to track changes and facilitate team collaboration. This means pushing all migrations into the Git Repo.
 - **Error Handling:** Make sure to handle errors properly during the migration process and test migrations in a development environment before running them in production.
 
+---
 For more detailed information, troubleshooting, or if you need to go back to the main documentation, please refer to the [README.md](../README.md).
