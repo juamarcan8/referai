@@ -1,6 +1,6 @@
 # Contributing Guide for *referai*
 
-This is repository is part of a final degree project (TFG), so contributions will be limited to team members only. However, we aim to maintain a consistent and clean workflow throughout development.
+This repository is part of a final degree project (TFG), so contributions will be limited to team members only. However, we aim to maintain a consistent and clean workflow throughout development.
 
 ## Workflow
 We follow [**Gitflow**](https://www.atlassian.com/es/git/tutorials/comparing-workflows/gitflow-workflow) workflow to manage our development process:
