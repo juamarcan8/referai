@@ -11,4 +11,5 @@ By integrating as a live assistant, this solution democratizes access to referee
 
 ## Documentation
 
+- [Installation guide](./docs/DATABASE_MIGRATION.md).
 - [Database migrations guide](./docs/DATABASE_MIGRATION.md).
