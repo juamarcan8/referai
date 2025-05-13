@@ -250,7 +250,7 @@ export default function MainPage() {
                 step={0.01}
                 value={currentTime}
                 onInput={(e) => handleTimeUpdate(Number(e.currentTarget.value))}
-                className="w-full accent-blue-700"
+                className="w-full accent-indigo-600"
               />
 
 
@@ -263,7 +263,7 @@ export default function MainPage() {
               <button
                 onClick={togglePlayPause}
                 aria-pressed={isPlaying}
-                className="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className="text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5"
               >
                 {isPlaying ? "Pause" : "Play"}
               </button>
@@ -344,7 +344,7 @@ export default function MainPage() {
             <button
               onClick={handlePrediction}
               disabled={loading || selectedVideos.length === 0}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="mt-4 px-4 py-2 text-white rounded bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

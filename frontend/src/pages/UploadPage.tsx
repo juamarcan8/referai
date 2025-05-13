@@ -7,10 +7,9 @@ import { getLastAction } from "../api/action";
 import Toast from "../components/Toast";
 
 export default function UploadPage() {
-  const { selectedVideos, setSelectedVideos } = useSelectedVideos();
+  const { selectedVideos, setSelectedVideos, uploadedFiles, setUploadedFiles } = useSelectedVideos();
   const navigate = useNavigate();
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [lastAction, setLastAction] = useState<{
     action_id: number;
     clips: { id: number; content: string }[];

@@ -67,7 +67,7 @@ alembic upgrade head
 
 This will automatically locate the existing migrations and execute them. Once this is done, you can access to the system using the following credentials:
 - User: 'admin@admin.com'.
-- Password: 'admin@admin.com'.
+- Password: 'Passw0rd'. 
 
 ### 3.2 Modify Database
 
