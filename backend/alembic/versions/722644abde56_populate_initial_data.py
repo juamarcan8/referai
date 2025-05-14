@@ -11,6 +11,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from app.db.models import User, Action, Clip, Prediction
+from passlib.context import CryptContext
 import os
 
 
@@ -20,13 +21,16 @@ down_revision: Union[str, None] = '7e0b4d682552'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def upgrade():
     bind = op.get_bind()
     session = Session(bind=bind)
 
     # Creates user
-    user = User(email="admin@admin.com", password="AdminPassw0rd")
+    hashed_password = pwd_context.hash("AdminPassw0rd")
+    user = User(email="admin@admin.com", password=hashed_password)
     session.add(user)
     session.flush()
 
@@ -54,15 +58,23 @@ def upgrade():
     # Creates prediction
     # Note: The prediction is created with the action_id of the action created above
     prediction = Prediction(
-        action_id=action.id,
-        is_foul=True,
-        foul_confidence=0.87,
-        no_foul_confidence=0.13,
-        foul_model_results=[{"model": "foul_v1", "confidence": 0.87}],
-        no_card_confidence=0.1,
-        red_card_confidence=0.6,
-        yellow_card_confidence=0.3,
-        severity_model_results=[{"model": "severity_v1", "label": "RED", "confidence": 0.6}]
+    action_id=action.id,
+    is_foul=True,
+    foul_confidence=66.67,
+    no_foul_confidence=33.33,
+    foul_model_results=[
+        {"model": "Foul Model 1", "prediction": 1},
+        {"model": "Foul Model 2", "prediction": 1},
+        {"model": "Foul Model 3", "prediction": 0}
+    ],
+    no_card_confidence=0.0,
+    red_card_confidence=33.33,
+    yellow_card_confidence=66.67,
+    severity_model_results=[
+        {"model": "Severity Model 1", "prediction": 2},
+        {"model": "Severity Model 2", "prediction": 2},
+        {"model": "Severity Model 3", "prediction": 1}
+    ]
     )
     session.add(prediction)
 
