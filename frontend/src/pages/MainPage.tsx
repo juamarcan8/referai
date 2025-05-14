@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PredictResponse, SinglePrediction } from "../api/predict";
 import Navbar from "../components/Navbar";
-import Toast from "../components/Toast";  // Asegúrate de que este componente esté importado
+import Toast from "../components/Toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
