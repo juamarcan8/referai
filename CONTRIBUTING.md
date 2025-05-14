@@ -1,29 +1,30 @@
-# Contributing to the Repository
+# Contributing Guide for *referai*
 
-Since this is a repository for our TFG, only the team members will be contributing. However, we want to ensure a consistent workflow and commit history. 
+This repository is part of a final degree project (TFG), so contributions will be limited to team members only. However, we aim to maintain a consistent and clean workflow throughout development.
 
 ## Workflow
-We will be using **Gitflow** as our workflow:
-- All work will be done in feature branches created from `develop`.
-- Once a feature is complete, it will be merged into `develop` through a pull request.
+We follow [**Gitflow**](https://www.atlassian.com/es/git/tutorials/comparing-workflows/gitflow-workflow) workflow to manage our development process:
+- All new work will be done in `feature/task` branches created from `develop`.
+- Once a feature is completed, it will be merged into `develop` through a pull request.
+- Pull requests must be reviewed and approved by the other member before merging.
 
 ## Commit Message Guidelines
 
-We will follow the [**Conventional Commits**](https://www.conventionalcommits.org/en/v1.0.0/) standard for all commit messages. This ensures clear, consistent messages that describe the purpose of each commit.
+We follow the [**Conventional Commits**](https://www.conventionalcommits.org/en/v1.0.0/) specification for all commit messages to ensure that our commit history is consistent and descriptive.
 
-Commit messages should follow this format:
+Commit messages should follow this structure:
 
 > type: description
 > 
-> optional body
+> (optional body)
 
-**Types**:
-- `feat`: a commit of the type feat introduces a new feature to the codebase.
-- `fix`:  a commit of the type fix patches a bug in your codebase.
-- `docs`: a commit of the type docs introduces documentation.
-- `style`: a commit of the type style introduces style changes (formatting, etc.).
-- `refactor`: a commit of the type introduces refactoring code without changing behavior.
-- `test`: a commit of the type test adds or updates tests.
+**Allowed Types**:
+- `feat`: Introduces a new feature to the codebase.
+- `fix`:  Fixes a bug.
+- `docs`: Adds or updates documentation.
+- `style`: Introduces style changes (no logic changes).
+- `refactor`: Refactors code without changing behavior.
+- `test`: Adds or updates tests.
 
     ...
 
