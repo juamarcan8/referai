@@ -9,6 +9,11 @@ Referai offers a real, effective, and affordable solution for these leagues. Thi
 
 By integrating as a live assistant, this solution democratizes access to referee support technology in leagues and countries with limited resources, reducing errors, unifying decision-making criteria, preserving game flow, and strengthening trust among all football stakeholders.
 
+## What is *REFERAI*?
+The main purpose of the project is to provide users with an accessible and efficient tool to analyze soccer actions and determine, in an objective manner, whether a foul has occurred and what the corresponding sanction would be.
+
+This system is especially oriented to leagues or competitions that do not have the economic or infrastructure resources to implement the costly VAR system, thus allowing them to access a system that improves refereeing decision making, promotes fairness in the game and democratizes access to technology without incurring large costs.
+
 ## Documentation
 
 - [Installation guide](./docs/INSTALLATION.md)
